@@ -8,8 +8,11 @@ use bevy::{
 use bevy_dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig};
 use bevy_framepace::FramepacePlugin;
 
+/// Initializes core Bevy plugins for the main application, including window settings,
+/// FPS overlay, and frame pacing.
 pub fn init_core_plugins(app: &mut bevy::app::App) {
     // Configure the FPS overlay display.
+    // Defines custom settings for the FPS overlay, including text style, color, and refresh rate.
     let config = FpsOverlayConfig {
         text_config: TextFont {
             font_size: FontSize::Px(16.0),
@@ -21,8 +24,8 @@ pub fn init_core_plugins(app: &mut bevy::app::App) {
         frame_time_graph_config: FrameTimeGraphConfig::default(),
     };
 
-    // Add default Bevy plugins and configure the primary window.
-    // Set present mode to Mailbox for low-latency rendering without vsync.
+    // Adds default Bevy plugins and configures the primary window.
+    // Sets present mode to Mailbox for low-latency rendering without vsync, prioritizing responsiveness.
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
             present_mode: bevy::window::PresentMode::Mailbox, // No waiting for monitor
@@ -30,16 +33,15 @@ pub fn init_core_plugins(app: &mut bevy::app::App) {
         }),
         ..default()
     }))
-    .add_plugins((
-        // Add the FramepacePlugin for advanced frame pacing control (e.g., capping FPS).
-        FramepacePlugin,
-        // Add the FpsOverlayPlugin with the custom configuration to display FPS.
-        FpsOverlayPlugin { config },
-    ))
+    // Integrates FramepacePlugin for advanced frame pacing control (e.g., capping FPS),
+    // and FpsOverlayPlugin with custom configuration to display performance metrics.
+    .add_plugins((FramepacePlugin, FpsOverlayPlugin { config }))
     // Register the setup system to run once at application startup.
     .add_systems(Startup, setup);
 }
 
+/// Initializes plugins specifically for the editor, configuring window settings
+/// for immediate rendering and event-driven updates to optimize resource usage.
 pub fn init_editor_plugins(app: &mut bevy::app::App) {
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
@@ -48,7 +50,8 @@ pub fn init_editor_plugins(app: &mut bevy::app::App) {
         }),
         ..default()
     }))
-    // Configure Bevy to only update on events
+    // Configures Bevy to only update on events, optimizing for editor interactivity and power efficiency.
+    // Focused mode updates reactively every 5 seconds, unfocused mode every 10 seconds.
     .insert_resource(WinitSettings {
         focused_mode: UpdateMode::reactive(std::time::Duration::from_secs(5)),
         unfocused_mode: UpdateMode::reactive_low_power(std::time::Duration::from_secs(10)),
@@ -57,6 +60,8 @@ pub fn init_editor_plugins(app: &mut bevy::app::App) {
     .add_systems(Startup, setup);
 }
 
+/// Sets up a basic 2D camera with a specific render layer (12) for potential layering
+/// or editor-specific views, making it distinct from other cameras.
 fn setup(mut commands: Commands) {
     commands.spawn((
         Camera2d,
@@ -68,8 +73,12 @@ fn setup(mut commands: Commands) {
     ));
 }
 
+/// Creates an orthographic projection suitable for 2D views or editor cameras.
+/// Configured for fixed vertical scaling and specific near/far planes for depth control.
 pub fn orthographic_projection() -> Projection {
     Projection::Orthographic(OrthographicProjection {
+        // Sets the scaling mode to maintain a fixed vertical viewport height,
+        // ensuring consistent aspect ratio regardless of window size changes.
         scaling_mode: bevy::camera::ScalingMode::FixedVertical {
             viewport_height: 10.0,
         },

@@ -7,16 +7,28 @@ use bevy::{
 
 use moonshine_core::prelude::*;
 
+/// A component that defines a 2D camera with pan and zoom capabilities.
+///
+/// This struct holds the camera's state, including its current focus point,
+/// current and target zoom scales, and a reference to its transform instance.
 #[derive(Component)]
 pub struct PanZoom2dCamera {
+    /// The world-space coordinate that the camera is currently focused on.
     pub focus: Vec2,
+    /// The current scale (zoom level) of the camera.
     pub scale: f32,
+    /// The target scale (zoom level) that the camera is smoothly moving towards.
     pub target_scale: f32,
+    /// A placeholder for an instance of `Transform`, possibly for external interaction.
     pub to: Instance<Transform>,
+    /// Stores the last known screen-space cursor position for calculating pan deltas.
     pub last_cursor_pos: Option<Vec2>,
 }
 
 impl Default for PanZoom2dCamera {
+    /// Provides the default configuration for `PanZoom2dCamera`.
+    ///
+    /// Initializes the camera with a zero focus, a scale of 1.0, and no stored cursor position.
     fn default() -> Self {
         Self {
             focus: Vec2::ZERO,
@@ -29,6 +41,13 @@ impl Default for PanZoom2dCamera {
 }
 
 impl PanZoom2dCamera {
+    /// Smoothly interpolates the camera's scale and focus towards their target values.
+    ///
+    /// This method updates the camera's current `scale` and the `translation` of the
+    /// associated `Transform` component to gradually approach `target_scale` and `focus`
+    /// respectively, based on the provided `smoothing` factor.
+    /// It returns `true` if any interpolation occurred, indicating the need for a redraw,
+    /// and `false` otherwise if the camera has reached its target state.
     fn lerp(&mut self, tr: &mut Transform, smoothing: f32) -> bool {
         let mut draw = false;
 
@@ -51,6 +70,13 @@ impl PanZoom2dCamera {
         return draw;
     }
 
+    /// Adjusts the camera's target scale based on a scroll delta input.
+    ///
+    /// The zoom operation is multiplicative, providing a natural feeling of increasing
+    /// or decreasing zoom levels regardless of the current scale depth.
+    /// The `delta` value typically comes from mouse scroll input, where positive values
+    /// zoom in and negative values zoom out. The `target_scale` is clamped to prevent
+    /// extreme zoom levels.
     fn zoom(&mut self, delta: f32) {
         if delta != 0.0f32 {
             // Multiplicative factor scales zoom naturally regardless of current scale depth
@@ -59,6 +85,13 @@ impl PanZoom2dCamera {
         }
     }
 
+    /// Pans the camera by updating its `focus` based on the difference between the current
+    /// and last known cursor positions.
+    ///
+    /// This method calculates the world-space movement delta from screen-space cursor movement.
+    /// It requires the current `Camera` and `OrthographicProjection` to convert screen
+    /// coordinates to world coordinates accurately. The `last_cursor_pos` is updated
+    /// for the next frame's calculation.
     fn pan(&mut self, cam: &Camera, projection: &mut OrthographicProjection, cursor_pos: Vec2) {
         if let Some(last_pos) = self.last_cursor_pos {
             let mut delta_cursor = cursor_pos - last_pos;
@@ -82,6 +115,14 @@ impl PanZoom2dCamera {
     }
 }
 
+/// A Bevy system that provides pan and zoom functionality for entities with a `PanZoom2dCamera` component.
+///
+/// This system queries for `PanZoom2dCamera` components along with their `Camera`, `Projection`,
+/// and `Transform` components. It processes user input from mouse scroll for zooming and
+/// mouse drag (specifically the left mouse button while the `Space` key is pressed) for panning.
+/// The camera's movement and scaling are smoothly interpolated based on the `WinitSettings` update mode,
+/// allowing for continuous or reactive updates. It also handles resetting the `last_cursor_pos`
+/// when the left mouse button is released to prevent erroneous panning when starting a new drag.
 pub fn pan_zoom_camera_system(
     time: Res<Time>,
     mut cameras: Query<(
@@ -149,8 +190,15 @@ pub fn pan_zoom_camera_system(
 }
 
 // Setup snippet to add to your app:
+/// A setup system that spawns a default 2D camera with `PanZoom2dCamera` capabilities.
+///
+/// This function is intended to be added to a Bevy app to initialize a camera
+/// entity that can be panned and zoomed. The camera is configured with a
+/// `Camera2d` bundle and a `PanZoom2dCamera` component, positioned with a
+/// default `Transform` to ensure 2D content is properly visible.
 pub fn setup(mut commands: Commands) {
     commands.spawn((
+        // Default camera transform, positioned far back in Z to ensure 2D content is visible
         Transform {
             translation: Vec3::new(0.0, 0.0, 500.0),
             ..default()

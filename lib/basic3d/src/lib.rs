@@ -3,14 +3,16 @@ use bevy_dev_tools::infinite_grid::{InfiniteGrid, InfiniteGridPlugin, InfiniteGr
 
 mod cam;
 
+/// Initializes the basic 3D plugins for the application.
+/// Adds `InfiniteGridPlugin` and registers `setup` and `dolly_camera_system`.
 pub fn init_plugins(app: &mut bevy::app::App) {
-    // Add the InfiniteGridPlugin for 3D debugging with a visual grid.
     app.add_plugins(InfiniteGridPlugin)
-        // Register the setup_debug_grid_3d system to run once at application startup.
         .add_systems(Startup, (setup, cam::setup))
         .add_systems(Update, cam::dolly_camera_system);
 }
 
+/// Sets up the infinite grid for 3D debugging.
+/// Spawns an `InfiniteGrid` entity with default settings.
 fn setup(mut commands: Commands) {
     commands.spawn((InfiniteGrid, InfiniteGridSettings::default()));
 }
