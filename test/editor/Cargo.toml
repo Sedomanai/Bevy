@@ -1,0 +1,10 @@
+[package]
+name = "editor"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sonolil_core = { path = "../../lib/_core" }
+sonolil_basic2d = { path = "../../lib/basic2d" }
+
+bevy.workspace = true

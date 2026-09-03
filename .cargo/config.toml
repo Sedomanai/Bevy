@@ -1,0 +1,10 @@
+[alias]
+# Builds  default-members of the workspace, always make sure it includes all
+dev-build = "build --features bevy/dynamic_linking"
+
+# Builds the entire workspace cache at once
+dev-build-all = "build --workspace --features bevy/dynamic_linking"
+
+# Runs default-members of the workspace, always make sure it includes all
+dev = "run --features bevy/dynamic_linking"
+

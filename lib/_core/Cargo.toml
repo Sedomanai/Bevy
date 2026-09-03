@@ -1,0 +1,12 @@
+[package]
+name = "sonolil_core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy.workspace = true
+bevy_dev_tools.workspace = true
+bevy_framepace.workspace = true
+moonshine-core.workspace = true
+
+leafwing-input-manager.workspace = true

@@ -1,0 +1,10 @@
+[package]
+name = "basic"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sonolil_core = { path = "../../lib/_core" }
+sonolil_basic3d = { path = "../../lib/basic3d" }
+
+bevy.workspace = true
