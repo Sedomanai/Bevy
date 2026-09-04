@@ -11,9 +11,11 @@ bevy_framepace.workspace = true
 moonshine-core.workspace = true
 
 # GUI
+egui.workspace = true
 egui_dock.workspace = true
 egui-keyframe.workspace = true
 egui_ltreeview.workspace = true
+bevy_egui.workspace = true
 bevy-inspector-egui.workspace = true
 bevy_gltf.workspace = true
 

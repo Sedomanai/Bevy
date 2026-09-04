@@ -1,0 +1,17 @@
+[package]
+name = "sonolil_editor"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy.workspace = true
+moonshine-core.workspace = true
+
+leafwing-input-manager.workspace = true
+
+egui.workspace = true
+egui_dock.workspace = true
+egui-keyframe.workspace = true
+egui_ltreeview.workspace = true
+bevy_egui.workspace = true
+bevy-inspector-egui.workspace = true

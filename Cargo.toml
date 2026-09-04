@@ -6,7 +6,7 @@ members = [
 ]
 
 resolver = "2"
-default-members = ["all"] # Always include 'all'
+default-members = ["all", "test/editor"] # Always include 'all'
 
 # Enable fast linking and dynamic linking optimization for development
 [profile.dev]
@@ -23,9 +23,11 @@ bevy_framepace = "0.22"
 moonshine-core = "0.6.0"
 
 # GUI
+egui = { version = "0.34" }
 egui_dock = { "version" = "0.19.1", features = ["serde"] }
 egui_ltreeview = { "version" = "0.7.1", features = ["persistence"] }
 egui-keyframe = { git = "https://github.com/virtualritz/egui-keyframe.git", rev = "2eb3da4d3f72f7fc47a085b78cab345b5382a85a" }
+bevy_egui = { version = "0.40.0" }
 bevy-inspector-egui = "0.37.0"
 bevy_gltf = { "version" = "0.19.1", features = ["bevy_animation", "pbr_anisotropy_texture", "pbr_multi_layer_material_textures", "pbr_specular_textures", "pbr_transmission_textures"] }
 

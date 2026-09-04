@@ -235,6 +235,7 @@ dependencies = [
  "bevy_ecs_ldtk",
  "bevy_ecs_tiled",
  "bevy_ecs_tilemap",
+ "bevy_egui",
  "bevy_framepace",
  "bevy_gltf",
  "bevy_hanabi",
@@ -242,6 +243,7 @@ dependencies = [
  "bevy_northstar",
  "bevy_rand",
  "bevy_tweening",
+ "egui",
  "egui-keyframe",
  "egui_dock",
  "egui_ltreeview",
@@ -1273,12 +1275,14 @@ dependencies = [
  "bevy_log",
  "bevy_math",
  "bevy_mesh",
+ "bevy_picking",
  "bevy_platform",
  "bevy_reflect",
  "bevy_render",
  "bevy_shader",
  "bevy_time",
  "bevy_transform",
+ "bevy_ui_render",
  "bevy_utils",
  "bevy_window",
  "bevy_winit",
@@ -1295,6 +1299,7 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+ "webbrowser",
  "wgpu-types",
  "winit",
 ]
@@ -3627,8 +3632,12 @@ name = "editor"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy_egui",
+ "egui",
+ "egui_dock",
  "sonolil_basic2d",
  "sonolil_core",
+ "sonolil_editor",
 ]
 
 [[package]]
@@ -8697,6 +8706,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "sonolil_editor"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy-inspector-egui",
+ "bevy_egui",
+ "egui",
+ "egui-keyframe",
+ "egui_dock",
+ "egui_ltreeview",
+ "leafwing-input-manager",
+ "moonshine-core",
+]
+
+[[package]]
 name = "spade"
 version = "2.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9996,6 +10020,22 @@ dependencies = [
  "pastey",
  "wasm-bindgen",
  "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "webbrowser"
+version = "1.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62c35be770821a214dbc362fc26908c853e776c0004294d0b10b8a6bad582f94"
+dependencies = [
+ "jni 0.22.4",
+ "log",
+ "ndk-context",
+ "objc2 0.6.4",
+ "objc2-app-kit 0.3.2",
+ "objc2-foundation 0.3.2",
+ "url",
  "web-sys",
 ]
 

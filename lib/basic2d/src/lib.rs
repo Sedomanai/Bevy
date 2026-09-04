@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-mod cam;
+pub mod cam;
 mod grid2d;
 
 /// Initializes 2D specific plugins for the application, including camera and grid systems.

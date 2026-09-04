@@ -8,6 +8,9 @@ use bevy::{
 use bevy_dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig};
 use bevy_framepace::FramepacePlugin;
 
+#[derive(Component)]
+pub struct MainCamera;
+
 /// Initializes core Bevy plugins for the main application, including window settings,
 /// FPS overlay, and frame pacing.
 pub fn init_core_plugins(app: &mut bevy::app::App) {
@@ -69,7 +72,7 @@ fn setup(mut commands: Commands) {
             order: 32,
             ..default()
         },
-        RenderLayers::layer(12),
+        RenderLayers::layer(32),
     ));
 }
 

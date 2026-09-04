@@ -198,6 +198,7 @@ pub fn pan_zoom_camera_system(
 /// default `Transform` to ensure 2D content is properly visible.
 pub fn setup(mut commands: Commands) {
     commands.spawn((
+        sonolil_core::MainCamera,
         // Default camera transform, positioned far back in Z to ensure 2D content is visible
         Transform {
             translation: Vec3::new(0.0, 0.0, 500.0),

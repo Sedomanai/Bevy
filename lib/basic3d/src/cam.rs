@@ -268,6 +268,7 @@ pub fn setup(mut commands: Commands) {
     let mut cam = DollyCamera::default();
     cam.from(Vec3::new(7.35, -6.92, 4.95));
     commands.spawn((
+        sonolil_core::MainCamera,
         Camera3d::default(),
         Projection::Orthographic(OrthographicProjection {
             scaling_mode: bevy::camera::ScalingMode::FixedVertical {
