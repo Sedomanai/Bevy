@@ -5,7 +5,18 @@ use bevy::{
     winit::{UpdateMode, WinitSettings},
 };
 
-use moonshine_core::prelude::*;
+use sonolil_util::*;
+
+pub struct PanZoom2dCameraPlugin;
+
+impl Plugin for PanZoom2dCameraPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Startup, init.in_set(pass::StartupSubProcess))
+            .add_systems(Update, update);
+    }
+}
+
+// TODO: Separate the components into chunks to find change
 
 /// A component that defines a 2D camera with pan and zoom capabilities.
 ///
@@ -13,14 +24,14 @@ use moonshine_core::prelude::*;
 /// current and target zoom scales, and a reference to its transform instance.
 #[derive(Component)]
 pub struct PanZoom2dCamera {
-    /// The world-space coordinate that the camera is currently focused on.
+    /// The world-space coordinate that the camera is currently targeting. (Not the same as current position.)
     pub focus: Vec2,
     /// The current scale (zoom level) of the camera.
     pub scale: f32,
     /// The target scale (zoom level) that the camera is smoothly moving towards.
     pub target_scale: f32,
     /// A placeholder for an instance of `Transform`, possibly for external interaction.
-    pub to: Instance<Transform>,
+    pub to: Entity,
     /// Stores the last known screen-space cursor position for calculating pan deltas.
     pub last_cursor_pos: Option<Vec2>,
 }
@@ -34,7 +45,7 @@ impl Default for PanZoom2dCamera {
             focus: Vec2::ZERO,
             scale: 1.0,
             target_scale: 1.0,
-            to: Instance::PLACEHOLDER,
+            to: Entity::PLACEHOLDER,
             last_cursor_pos: None,
         }
     }
@@ -115,6 +126,16 @@ impl PanZoom2dCamera {
     }
 }
 
+/// Adds a default `DollyCamera` to an existing Main Camera
+fn init(
+    mut commands: Commands,
+    mut e: Query<Entity, (With<tags::MainWorldCamera>, With<Camera2d>)>,
+) {
+    if let Ok(e) = e.single_mut() {
+        commands.entity(e).insert(PanZoom2dCamera::default());
+    }
+}
+
 /// A Bevy system that provides pan and zoom functionality for entities with a `PanZoom2dCamera` component.
 ///
 /// This system queries for `PanZoom2dCamera` components along with their `Camera`, `Projection`,
@@ -123,7 +144,7 @@ impl PanZoom2dCamera {
 /// The camera's movement and scaling are smoothly interpolated based on the `WinitSettings` update mode,
 /// allowing for continuous or reactive updates. It also handles resetting the `last_cursor_pos`
 /// when the left mouse button is released to prevent erroneous panning when starting a new drag.
-pub fn pan_zoom_camera_system(
+fn update(
     time: Res<Time>,
     mut cameras: Query<(
         &mut PanZoom2dCamera,
@@ -163,7 +184,7 @@ pub fn pan_zoom_camera_system(
             let Some(cursor_pos) = window.cursor_position() else {
                 return;
             };
-            panzoom.to = Instance::PLACEHOLDER;
+            panzoom.to = Entity::PLACEHOLDER;
             panzoom.pan(&cam, ortho, cursor_pos);
         }
 
@@ -187,24 +208,4 @@ pub fn pan_zoom_camera_system(
             }
         }
     }
-}
-
-// Setup snippet to add to your app:
-/// A setup system that spawns a default 2D camera with `PanZoom2dCamera` capabilities.
-///
-/// This function is intended to be added to a Bevy app to initialize a camera
-/// entity that can be panned and zoomed. The camera is configured with a
-/// `Camera2d` bundle and a `PanZoom2dCamera` component, positioned with a
-/// default `Transform` to ensure 2D content is properly visible.
-pub fn setup(mut commands: Commands) {
-    commands.spawn((
-        sonolil_core::MainCamera,
-        // Default camera transform, positioned far back in Z to ensure 2D content is visible
-        Transform {
-            translation: Vec3::new(0.0, 0.0, 500.0),
-            ..default()
-        },
-        Camera2d::default(),
-        PanZoom2dCamera::default(),
-    ));
 }

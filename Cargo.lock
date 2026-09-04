@@ -3638,6 +3638,7 @@ dependencies = [
  "sonolil_basic2d",
  "sonolil_core",
  "sonolil_editor",
+ "sonolil_util",
 ]
 
 [[package]]
@@ -8677,10 +8678,7 @@ name = "sonolil_basic2d"
 version = "0.1.0"
 dependencies = [
  "bevy",
- "bevy_dev_tools",
- "bevy_tweening",
- "moonshine-core",
- "sonolil_core",
+ "sonolil_util",
 ]
 
 [[package]]
@@ -8689,9 +8687,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_dev_tools",
- "bevy_tweening",
- "moonshine-core",
- "sonolil_core",
+ "sonolil_util",
 ]
 
 [[package]]
@@ -8701,8 +8697,7 @@ dependencies = [
  "bevy",
  "bevy_dev_tools",
  "bevy_framepace",
- "leafwing-input-manager",
- "moonshine-core",
+ "sonolil_util",
 ]
 
 [[package]]
@@ -8718,6 +8713,13 @@ dependencies = [
  "egui_ltreeview",
  "leafwing-input-manager",
  "moonshine-core",
+]
+
+[[package]]
+name = "sonolil_util"
+version = "0.1.0"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]

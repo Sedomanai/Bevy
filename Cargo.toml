@@ -6,7 +6,7 @@ members = [
 ]
 
 resolver = "2"
-default-members = ["all", "test/editor"] # Always include 'all'
+default-members = ["all", "test/basic"] # Always include 'all'
 
 # Enable fast linking and dynamic linking optimization for development
 [profile.dev]

@@ -2,7 +2,15 @@ use bevy::prelude::*;
 
 fn main() {
     let mut app = App::new();
-    sonolil_core::init_core_plugins(&mut app);
-    sonolil_basic3d::init_plugins(&mut app);
-    app.run();
+
+    app.add_plugins(sonolil_core::CorePlugin {
+        fps_overlay: true,
+        ..default()
+    })
+    .add_plugins(sonolil_basic3d::Basic3DPlugins {
+        orthographic: true,
+        draw_grid: true,
+        dolly: true,
+    })
+    .run();
 }

@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 sonolil_core = { path = "../../lib/_core" }
+sonolil_util = { path = "../../lib/_util" }
 sonolil_basic2d = { path = "../../lib/basic2d" }
 sonolil_editor = { path = "../../lib/editor" }
 

@@ -1,11 +1,11 @@
 use bevy::camera::RenderTarget;
 use bevy::prelude::*;
-use sonolil_core::MainCamera;
+use sonolil_util::*;
 
 mod ui;
 
 pub fn render_target(
-    mut camera: Query<&mut RenderTarget, With<MainCamera>>,
+    mut camera: Query<&mut RenderTarget, With<tags::MainWorldCamera>>,
     image_handle: ResMut<ui::view::ViewportImage>,
 ) {
     if image_handle.is_changed() {
@@ -17,9 +17,15 @@ pub fn render_target(
 
 fn main() {
     let mut app = App::new();
-    sonolil_core::init_editor_plugins(&mut app);
-    sonolil_basic2d::init_plugins(&mut app);
-    app.add_plugins(ui::EditorPlugins);
-    app.add_systems(Update, render_target);
-    app.run();
+    app.add_plugins(sonolil_core::CorePlugin {
+        reactive_update_mode: true,
+        ..default()
+    })
+    .add_plugins(sonolil_basic2d::Basic2DPlugins {
+        draw_grid: true,
+        pan_zoom: true,
+    })
+    .add_plugins(ui::EditorPlugins)
+    .add_systems(Update, render_target)
+    .run();
 }

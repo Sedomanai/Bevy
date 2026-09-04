@@ -4,10 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sonolil_core = { path = "../../lib/_core" }
-bevy.workspace = true
-bevy_dev_tools.workspace = true
-bevy_tweening.workspace = true
-
-moonshine-core.workspace = true
-
+sonolil_util = { path = "../../lib/_util" }
+bevy = { workspace = true, default-features = false }

@@ -1,7 +1,17 @@
 use bevy::input::mouse::{AccumulatedMouseMotion, AccumulatedMouseScroll};
 use bevy::prelude::*;
 use bevy::window::{CursorOptions, Window};
-use moonshine_core::prelude::*;
+
+use sonolil_util::*;
+
+pub struct DollyCameraPlugin;
+
+impl Plugin for DollyCameraPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Startup, init.in_set(pass::StartupSubProcess))
+            .add_systems(Update, update);
+    }
+}
 
 /// A component that controls a 3D camera with dolly, orbit, and pan functionalities.
 /// It manages the camera's target arcball, sensitivity, and interaction state.
@@ -12,9 +22,9 @@ pub struct DollyCamera {
     /// Sensitivity for camera movements (orbit, pan).
     pub sensitivity: f32,
     /// An optional instance to track a 'from' position for camera setup.
-    pub from: Instance<Transform>,
+    pub from: Entity,
     /// An optional instance to track a 'to' position (focus target) for camera setup.
-    pub to: Instance<Transform>,
+    pub to: Entity,
     /// The quaternion representing the pan plane's orientation.
     pub pan_plane: Quat,
     /// Stores the last cursor position for pan calculations, especially for orthographic projection.
@@ -81,8 +91,8 @@ impl Default for DollyCamera {
         Self {
             target_arc: Arcball::default(),
             sensitivity: 0.005,
-            from: Instance::PLACEHOLDER,
-            to: Instance::PLACEHOLDER,
+            from: Entity::PLACEHOLDER,
+            to: Entity::PLACEHOLDER,
             pan_plane: Quat::NAN,
             last_cursor_pos: Option::None,
         }
@@ -192,9 +202,21 @@ impl DollyCamera {
     }
 }
 
+/// Sets up a default `DollyCamera`
+fn init(
+    mut commands: Commands,
+    mut e: Query<Entity, (With<tags::MainWorldCamera>, With<Camera3d>)>,
+) {
+    let mut cam = DollyCamera::default();
+    cam.from(Vec3::new(7.35, -6.92, 4.95));
+    if let Ok(e) = e.single_mut() {
+        commands.entity(e).insert((cam, Arcball::default()));
+    }
+}
+
 /// The main Bevy system responsible for updating `DollyCamera`s.
 /// It handles mouse input for zooming, orbiting, and panning, and interpolates camera transformations.
-pub fn dolly_camera_system(
+fn update(
     time: Res<Time>,
     mut cameras: Query<(
         &mut DollyCamera,
@@ -230,7 +252,7 @@ pub fn dolly_camera_system(
         from.ok().map(|from| dolly.from(from.translation));
 
         if is_alt_pressed && mouse_buttons.pressed(MouseButton::Left) {
-            dolly.from = Instance::PLACEHOLDER;
+            dolly.from = Entity::PLACEHOLDER;
             dolly.orbit(&motion_delta);
         }
 
@@ -240,8 +262,8 @@ pub fn dolly_camera_system(
         }
 
         if mouse_buttons.pressed(MouseButton::Middle) {
-            dolly.from = Instance::PLACEHOLDER;
-            dolly.to = Instance::PLACEHOLDER;
+            dolly.from = Entity::PLACEHOLDER;
+            dolly.to = Entity::PLACEHOLDER;
 
             let Some(cursor_pos) = window.cursor_position() else {
                 continue;
@@ -260,26 +282,4 @@ pub fn dolly_camera_system(
         arcball.lerp(&dolly.target_arc, 10.0 * dt);
         arcball.apply_transform(&mut transform);
     }
-}
-
-/// Sets up a default `DollyCamera` with an orthographic projection.
-/// This function should be added to the Bevy app's `Startup` systems.
-pub fn setup(mut commands: Commands) {
-    let mut cam = DollyCamera::default();
-    cam.from(Vec3::new(7.35, -6.92, 4.95));
-    commands.spawn((
-        sonolil_core::MainCamera,
-        Camera3d::default(),
-        Projection::Orthographic(OrthographicProjection {
-            scaling_mode: bevy::camera::ScalingMode::FixedVertical {
-                viewport_height: 10.0,
-            },
-            scale: 1.0,
-            near: -1000.0,
-            far: 1000.0,
-            ..OrthographicProjection::default_3d()
-        }),
-        cam,
-        Arcball::default(),
-    ));
 }
