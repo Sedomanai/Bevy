@@ -83,8 +83,6 @@ impl Plugin for CorePlugin {
 }
 
 pub fn init(mut commands: Commands) {
-    println!("core cam init");
-
     commands.spawn((
         tags::DebugCamera,
         Camera2d,

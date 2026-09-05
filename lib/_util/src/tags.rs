@@ -1,16 +1,20 @@
 use bevy::prelude::Component;
 
-#[derive(Component)]
+// Cameras
+
+#[derive(Component, Default)]
 pub struct MainWorldCamera;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct SubWorldCamera;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct GameUICamera;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct DebugCamera;
 
-#[derive(Component)]
+// Cameras
+
+#[derive(Component, Default)]
 pub struct WorldGrid;

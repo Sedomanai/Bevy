@@ -1,19 +1,5 @@
-use bevy::camera::RenderTarget;
 use bevy::prelude::*;
-use sonolil_util::*;
-
 mod ui;
-
-pub fn render_target(
-    mut camera: Query<&mut RenderTarget, With<tags::MainWorldCamera>>,
-    image_handle: ResMut<ui::view::ViewportImage>,
-) {
-    if image_handle.is_changed() {
-        if let Ok(mut target) = camera.single_mut() {
-            *target = RenderTarget::Image(image_handle.clone().into());
-        }
-    }
-}
 
 fn main() {
     let mut app = App::new();
@@ -26,6 +12,5 @@ fn main() {
         pan_zoom: true,
     })
     .add_plugins(ui::EditorPlugins)
-    .add_systems(Update, render_target)
     .run();
 }

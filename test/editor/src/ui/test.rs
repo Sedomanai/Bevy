@@ -1,9 +1,9 @@
-use bevy::{
-    camera::{visibility::RenderLayers, RenderTarget},
-    prelude::*,
-};
+use bevy::{camera::visibility::RenderLayers, prelude::*};
 use bevy_egui::{egui, EguiContexts, EguiPlugin, EguiPrimaryContextPass};
 use egui_dock::{DockArea, DockState, NodeIndex, TabViewer};
+
+use crate::ui::viewport::*;
+use sonolil_util::*;
 
 pub struct DockPlugin;
 
@@ -11,8 +11,13 @@ impl Plugin for DockPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(EguiPlugin::default())
             .init_resource::<EditorUiState>()
-            .add_systems(Startup, spawn_ui_cam)
-            .add_systems(EguiPrimaryContextPass, dock_ui_system);
+            .add_systems(Startup, spawn_ui_cam.in_set(pass::StartupSpawn))
+            .add_systems(EguiPrimaryContextPass, dock_ui_system)
+            .add_systems(
+                Startup,
+                render::render_target_to_image::<tags::MainWorldCamera>
+                    .in_set(pass::StartupProcess),
+            );
     }
 }
 
@@ -27,7 +32,7 @@ enum Tab {
 // 2. Define the TabViewer to render content based on the active tab
 struct MyTabViewer<'a> {
     counter: &'a mut u32,
-    viewport_texture: Option<egui::TextureId>,
+    main_view_state: &'a mut ViewportState,
 }
 
 impl<'a> TabViewer for MyTabViewer<'a> {
@@ -56,11 +61,27 @@ impl<'a> TabViewer for MyTabViewer<'a> {
             }
             Tab::Viewport => {
                 ui.heading("3D Viewport");
-                if let Some(tex) = self.viewport_texture {
-                    ui.add(egui::Image::new((tex, ui.available_size())));
-                } else {
-                    ui.label("Game view goes here, no game viewport texture yet.");
-                }
+                let panel_size = ui.available_size();
+                let texture_size = egui::vec2(1920.0, 1080.0);
+
+                let uv_width = (panel_size.x / texture_size.x).min(1.0);
+                let uv_height = (panel_size.y / texture_size.y).min(1.0);
+
+                let half_uv_w = uv_width / 2.0;
+                let half_uv_h = uv_height / 2.0;
+
+                let uv_min = egui::pos2(0.5 - half_uv_w, 0.5 - half_uv_h);
+                let uv_max = egui::pos2(0.5 + half_uv_w, 0.5 + half_uv_h);
+
+                let render_size = egui::vec2(
+                    panel_size.x.min(texture_size.x),
+                    panel_size.y.min(texture_size.y),
+                );
+
+                ui.add(
+                    egui::Image::new((self.main_view_state.texture, render_size))
+                        .uv(egui::Rect::from_min_max(uv_min, uv_max)),
+                );
             }
         }
     }
@@ -69,7 +90,6 @@ impl<'a> TabViewer for MyTabViewer<'a> {
 // 3. Resource to hold the dock layout state and shared app state
 #[derive(Resource)]
 pub struct EditorUiState {
-    pub viewport_texture: Option<egui::TextureId>,
     dock_state: DockState<Tab>,
     counter: u32,
 }
@@ -85,7 +105,6 @@ impl Default for EditorUiState {
         let _ = surface.split_below(left_node, 0.7, vec![Tab::Console]);
 
         Self {
-            viewport_texture: Option::None,
             dock_state,
             counter: 0,
         }
@@ -106,39 +125,40 @@ pub fn spawn_ui_cam(mut commands: Commands) {
 }
 
 pub fn dock_ui_system(
-    mut commands: Commands,
     mut contexts: EguiContexts,
     mut ui_state: ResMut<EditorUiState>,
+    mut main_view: Query<&mut ViewportState, With<tags::MainWorldCamera>>,
 ) {
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
 
     let EditorUiState {
-        viewport_texture,
         dock_state,
         counter,
     } = &mut *ui_state;
 
-    let mut tab_viewer = MyTabViewer {
-        counter,
-        viewport_texture: *viewport_texture,
-    };
+    if let Ok(state) = main_view.single_mut() {
+        let mut tab_viewer = MyTabViewer {
+            counter,
+            main_view_state: state.into_inner(),
+        };
 
-    // #[allow(deprecated)]
-    // egui::CentralPanel::default()
-    //     .frame(egui::Frame::central_panel(&ctx.global_style()).inner_margin(0.))
-    //     .show(ctx, |ui| {
-    //         DockArea::new(dock_state)
-    //             .style(Style::from_egui(ui.style().as_ref()))
-    //             .show_inside(ui, &mut tab_viewer);
-    //     });
+        // #[allow(deprecated)]
+        // egui::CentralPanel::default()
+        //     .frame(egui::Frame::central_panel(&ctx.global_style()).inner_margin(0.))
+        //     .show(ctx, |ui| {
+        //         DockArea::new(dock_state)
+        //             .style(Style::from_egui(ui.style().as_ref()))
+        //             .show_inside(ui, &mut tab_viewer);
+        //     });
 
-    // #[allow(deprecated)]
-    // DockArea::new(dock_state)
-    //     .style(Style::from_egui(&ctx.global_style()))
-    //     .show(ctx, &mut tab_viewer);
+        // #[allow(deprecated)]
+        // DockArea::new(dock_state)
+        //     .style(Style::from_egui(&ctx.global_style()))
+        //     .show(ctx, &mut tab_viewer);
 
-    #[allow(deprecated)]
-    DockArea::new(dock_state).show(ctx, &mut tab_viewer);
+        #[allow(deprecated)]
+        DockArea::new(dock_state).show(ctx, &mut tab_viewer);
+    }
 }
