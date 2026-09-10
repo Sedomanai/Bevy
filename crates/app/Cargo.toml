@@ -1,0 +1,12 @@
+[package]
+name = "sonolil_app"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+hub = ["sonolil_hub"]
+
+[dependencies]
+sonolil_hub = { path = "../_hub", optional = true }
+bevy = { workspace = true, features = ["bevy_dev_tools", "bevy_camera", "bevy_winit", "bevy_text"] }
+bevy_framepace = { workspace = true }

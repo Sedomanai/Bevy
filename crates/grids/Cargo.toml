@@ -1,0 +1,14 @@
+[package]
+name = "sonolil_grids"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+hub = ["sonolil_hub"]
+2d = ["bevy/2d"]
+
+[dependencies]
+sonolil_hub = { path = "../_hub", optional = true }
+sonolil_render = { path = "../render"}
+bevy = { workspace = true }
+bevy_framepace = { workspace = true }

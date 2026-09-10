@@ -1,0 +1,12 @@
+[package]
+name = "sonolil_movement"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+hub = ["sonolil_hub"]
+# 2d = ["bevy/2d"]
+
+[dependencies]
+sonolil_hub = { path = "../_hub", optional = true }
+bevy = { workspace = true }

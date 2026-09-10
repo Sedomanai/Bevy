@@ -1,8 +1,0 @@
-[package]
-name = "sonolil_basic2d"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-sonolil_util = { path = "../../lib/_util" }
-bevy = { workspace = true, default-features = false }

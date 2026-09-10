@@ -1,12 +1,24 @@
+[package]
+name = "sonolil"
+version = "0.1.0"
+edition = "2024"
+categories = ["game-engines", "game-making", "game-maker", "indie-dev"]
+description = "Game engines and tools based on Bevy"
+exclude = ["assets/", "tools/", ".github/", "crates/", "examples/wasm/assets/", "legacy/"]
+# homepage = ""
+keywords = ["game", "engine", "gamedev", "indie", "bevy"]
+# license = "MIT OR Apache-2.0"
+repository = "https://github.com/Sedomanai/Bevy"
+# documentation = "https://docs.rs/my_homepage"
+rust-version = "1.98.0"
+
 [workspace]
 members = [
-	"all",
-	"lib/*",
-	"test/*"
+	"crates/*",
 ]
 
-resolver = "2"
-default-members = ["all", "test/editor"] # Always include 'all'
+resolver = "3"
+default-members = [""] 
 
 # Enable fast linking and dynamic linking optimization for development
 [profile.dev]
@@ -17,45 +29,107 @@ opt-level = 2
 
 [workspace.dependencies]
 # Core Framework
-bevy = "0.19.1"
-bevy_dev_tools = { "version" = "0.19.1", features = ["schedule_data", "screenrecording"] }
-bevy_framepace = "0.22"
-moonshine-core = "0.6.0"
+bevy = { version = "0.19.1", default-features = false }
+bevy_framepace = { "version" = "0.22", default-features = false }
+moonshine-core = { "version" = "0.6.0", default-features = false }
 
 # GUI
-egui = { version = "0.34" }
-egui_dock = { "version" = "0.19.1", features = ["serde"] }
-egui_ltreeview = { "version" = "0.7.1", features = ["persistence"] }
-egui-keyframe = { git = "https://github.com/virtualritz/egui-keyframe.git", rev = "2eb3da4d3f72f7fc47a085b78cab345b5382a85a" }
-bevy_egui = { version = "0.40.0" }
-bevy-inspector-egui = "0.37.0"
-bevy_gltf = { "version" = "0.19.1", features = ["bevy_animation", "pbr_anisotropy_texture", "pbr_multi_layer_material_textures", "pbr_specular_textures", "pbr_transmission_textures"] }
+egui = { version = "0.34", default-features = false  }
+egui_dock = { "version" = "0.19.1", default-features = false  }
+egui_ltreeview = { "version" = "0.7.1", default-features = false  }
+egui-keyframe = { git = "https://github.com/virtualritz/egui-keyframe.git", rev = "2eb3da4d3f72f7fc47a085b78cab345b5382a85a", default-features = false  }
+bevy_egui = { version = "0.40.0", default-features = false  }
+bevy-inspector-egui = {version = "0.37.0", default-features = false }
+bevy_gltf = { "version" = "0.19.1", default-features = false }
 
 # Input Handling / Action Mapping
-leafwing-input-manager = { version = "0.21", features = ["timing"] }
+leafwing-input-manager = { version = "0.21", default-features = false }
 
 # Asset Related
-bevy_kira_audio = { version = "0.26", features = ["ogg", "flac", "mp3", "wav"] }
-bevy_asset_loader = { version = "0.27.0", features = ["2d", "3d", "progress_tracking", "standard_dynamic_assets"] }
-iyes_progress = { version = "0.17.0", features = ["assets", "async", "debug"] }
+bevy_kira_audio = { version = "0.26", default-features = false }
+bevy_asset_loader = { version = "0.27.0", default-features = false }
+iyes_progress = { version = "0.17.0", default-features = false }
 
 # Tilemap & Level Design
-bevy_ecs_tilemap = "0.19.0"
-bevy_ecs_tiled = "0.13" 
-bevy_ecs_ldtk = "0.15.0" 
-bevy_northstar = "0.7.0"
+bevy_ecs_tilemap = {version = "0.19.0", default-features = false }
+bevy_ecs_tiled ={version =  "0.13", default-features = false }
+bevy_ecs_ldtk ={version =  "0.15.0", default-features = false }
+bevy_northstar ={version =  "0.7.0", default-features = false}
 
 # Physics & Movement
-bevy_tweening = "0.16.0" 
-avian2d = { version = "0.7.0", features = ["serialize", "bevy_diagnostic", "diagnostic_ui", "enhanced-determinism"] }
-avian3d = { version = "0.7.0", features = ["serialize", "bevy_diagnostic", "diagnostic_ui", "enhanced-determinism"] }
+bevy_tweening = {version = "0.16.0" , default-features = false }
+avian2d = { version = "0.7.0", default-features = false}
+avian3d = { version = "0.7.0",  default-features = false }
 
 # Network
-lightyear = "0.29.0"
+lightyear = {version = "0.29.0", default-features = false }
 
 # Environment
-bevy_hanabi = "0.19.0"
+bevy_hanabi = {version = "0.19.0", default-features = false }
 
 # Misc
-bevy_rand = { version = "0.15", features = ["chacha20", "wyrand"] }
-serde = { version = "1.0.229", features = ["derive"] } 
+bevy_rand = { version = "0.15", default-features = false }
+serde = { version = "1.0.229", default-features = false} 
+
+# For Examples
+[dependencies]
+# external
+bevy = { workspace = true, default-features = true }
+bevy_framepace = { workspace = true, default-features = true }
+moonshine-core = { workspace = true, default-features = true }
+
+# GUI
+egui = {workspace = true, default-features = true  }
+egui_dock = { workspace = true, default-features = true , features = ["serde"] }
+egui_ltreeview = { workspace = true, default-features = true, features = ["persistence"] }
+egui-keyframe = { git = "https://github.com/virtualritz/egui-keyframe.git", rev = "2eb3da4d3f72f7fc47a085b78cab345b5382a85a" }
+bevy_egui = {workspace = true, default-features = true   }
+bevy-inspector-egui = { workspace = true, default-features = true }
+bevy_gltf = { workspace = true, default-features = true, features = ["bevy_animation", "pbr_anisotropy_texture", "pbr_multi_layer_material_textures", "pbr_specular_textures", "pbr_transmission_textures"] }
+
+# Input Handling / Action Mapping
+leafwing-input-manager = { workspace = true, default-features = true, features = ["timing"] }
+
+# Asset Related
+bevy_kira_audio = { workspace = true, default-features = true, features = ["ogg", "flac", "mp3", "wav"] }
+bevy_asset_loader = { workspace = true, default-features = true, features = ["2d", "3d", "progress_tracking", "standard_dynamic_assets"] }
+iyes_progress = { workspace = true, default-features = true, features = ["assets", "async", "debug"] }
+
+# Tilemap & Level Design
+bevy_ecs_tilemap = { workspace = true, default-features = true }
+bevy_ecs_tiled = { workspace = true, default-features = true }
+bevy_ecs_ldtk = { workspace = true, default-features = true }
+bevy_northstar = { workspace = true, default-features = true }
+
+# Physics & Movement
+bevy_tweening = { workspace = true, default-features = true }
+avian2d = { workspace = true, default-features = true, features = ["serialize", "bevy_diagnostic", "diagnostic_ui", "enhanced-determinism"] }
+avian3d = { workspace = true, default-features = true , features = ["serialize", "bevy_diagnostic", "diagnostic_ui", "enhanced-determinism"] }
+
+# Network
+lightyear = { workspace = true, default-features = true }
+
+# Environment
+bevy_hanabi = { workspace = true, default-features = true }
+
+# Misc
+bevy_rand = { workspace = true, default-features = true , features = ["chacha20", "wyrand"] }
+serde = { workspace = true, default-features = true, features = ["derive"] } 
+
+# Internal
+sonolil_hub = { path = "crates/_hub" }
+
+sonolil_app = { path = "crates/app", features = ["hub"] }
+sonolil_camera = { path = "crates/camera", features = ["hub"] }
+sonolil_render = { path = "crates/render", features = ["hub"] }
+
+# TODO: Make features, if required some day
+# [features]
+
+[[example]]
+name = "show_window"
+path = "examples/app/show_window.rs"
+
+[[example]]
+name = "perspective_blend"
+path = "examples/camera/perspective_blend.rs"

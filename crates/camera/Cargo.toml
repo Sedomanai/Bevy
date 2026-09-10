@@ -1,0 +1,13 @@
+[package]
+name = "sonolil_camera"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+hub = ["sonolil_hub", "sonolil_render/hub"]
+
+[dependencies]
+sonolil_hub = { path = "../_hub", optional = true }
+sonolil_render = { path = "../render"}
+bevy = { workspace = true }
+bevy_framepace = { workspace = true }

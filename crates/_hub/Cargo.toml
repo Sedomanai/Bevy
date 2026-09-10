@@ -1,0 +1,8 @@
+[package]
+name = "sonolil_hub"
+version = "0.1.0"
+edition = "2021"
+description = "Schdule hub through which Sonolil crates can coordinate in desired order"
+
+[dependencies]
+bevy = { workspace = true }

@@ -1,0 +1,12 @@
+[package]
+name = "sonolil_render"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+hub = ["sonolil_hub"]
+
+[dependencies]
+sonolil_hub = { path = "../_hub", optional = true }
+bevy = { workspace = true, features = ["bevy_render"] }
+bevy_framepace = { workspace = true }
