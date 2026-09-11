@@ -7,10 +7,6 @@ fn main() {
         fps_overlay: true,
         ..default()
     })
-    // .add_plugins(sonolil_basic3d::Basic3DPlugins {
-    //     orthographic: true,
-    //     draw_grid: true,
-    //     dolly: true,
-    // })
+    .add_plugins(bevy::dev_tools::infinite_grid::InfiniteGridPlugin)
     .run();
 }

@@ -4,10 +4,7 @@ use sonolil_hub::*;
 pub struct RenderPlugin;
 impl Plugin for RenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            schedule::PreSetupSchedule,
-            init.in_set(schedule::SpawnTagged),
-        );
+        app.add_systems(schedule::SpawnTaggedSchedule, init);
     }
 }
 
@@ -24,6 +21,6 @@ fn init(
             order: 32,
             ..default()
         });
-        e.insert(bundleRenderLayers::layer(32));
+        e.insert(BundleRenderLayers::layer(32));
     }
 }

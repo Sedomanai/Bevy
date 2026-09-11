@@ -1,54 +1,48 @@
-use bevy::{ecs::component::Mutable, prelude::*};
+use bevy::{
+    ecs::component::{Component, Mutable},
+    prelude::*,
+};
 
-/// Anything that can absorb a GlobalTransform snapshot as a fallback cache.
-pub trait OnRelTargetDestruction: Component {
-    fn cache(&mut self, gt: &GlobalTransform);
-    //fn update_each_frame(&mut self, relationship_target: &GlobalTransform, parent: &GlobalTransform);
+pub trait CopyFromGlobalTransform: Component {
+    fn copy_transform(&mut self, gt: &GlobalTransform);
 }
 
-/// Generic version of on_trackedby_removed / cache_orbital_before_removed.
-pub fn cache_before_removed<MovementComponent, RelationTarget>(
-    trigger: On<Remove, GlobalTransform>,
-    mut caches: Query<&mut MovementComponent>,
-    related_bys: Query<&RelationTarget>,
-    transforms: Query<&GlobalTransform>,
+#[derive(Component, Clone, Copy)]
+#[require(Transform)]
+pub struct DoNotSyncOnInsert;
+
+pub fn on_insertion_sync<Comp>(
+    trigger: On<Insert, Comp>,
+    mut commands: Commands,
+    mut query: Query<(&mut Comp, &GlobalTransform, Has<DoNotSyncOnInsert>)>,
 ) where
-    MovementComponent: OnRelTargetDestruction + Component<Mutability = Mutable>,
-    RelationTarget: Component + std::ops::Deref<Target = Vec<Entity>>,
+    Comp: CopyFromGlobalTransform + Component<Mutability = Mutable>,
 {
     let e = trigger.entity;
-    let Ok(rel) = related_bys.get(e) else { return };
+    let Ok((mut tracker, tr, no_sync)) = query.get_mut(e) else {
+        return;
+    };
 
-    for rel in rel.iter() {
-        if let (Ok(gt), Ok(mut mc)) = (transforms.get(e), caches.get_mut(*rel)) {
-            mc.cache(gt);
+    if no_sync {
+        commands.entity(e).remove::<DoNotSyncOnInsert>();
+        return;
+    }
+
+    tracker.copy_transform(tr);
+}
+
+pub fn on_copy_from_relation<Comp, Rel>(
+    mut query: Query<(&mut Comp, Option<&Rel>)>,
+    transforms: Query<&GlobalTransform>,
+) where
+    Comp: CopyFromGlobalTransform + Component<Mutability = Mutable>,
+    Rel: Component + std::ops::Deref<Target = Entity>,
+{
+    for (mut comp, ing) in query.iter_mut() {
+        let ed_global = ing.and_then(|e| transforms.get(**e).ok());
+
+        if let Some(ed_tr) = ed_global {
+            comp.copy_transform(ed_tr);
         }
     }
 }
-
-// pub fn update_each_frame<MovementComponent, Relationship>(
-//     mut query: Query<(
-//         &mut MovementComponent,
-//         &mut Transform,
-//         Option<&Relationship>,
-//         Option<&ChildOf>,
-//     )>,
-//     transforms: Query<&GlobalTransform>,
-// ) where
-//     MovementComponent: OnRelTargetDestruction + Component<Mutability = Mutable>,
-//     Relationship: Component + std::ops::Deref<Target = Entity>,
-// {
-//     for (mut orbiter, mut tr, orbiting, child_of) in query.iter_mut() {
-//         let orbited_global = orbiting.and_then(|rel| transforms.get(**rel).ok());
-//         let parent_global = child_of.and_then(|c| transforms.get(c.parent()).ok());
-
-//         // let tracked_local: Vec3 = match (orbited_global, parent_global) {
-//         //     (Some(orbited), Some(parent)) => parent
-//         //         .affine()
-//         //         .inverse()
-//         //         .transform_point3(orbited.translation()),
-//         //     (Some(orbited), None) => orbited.translation(),
-//         //     (None, _) => orbiter.focal_point,
-//         // };
-//     }
-// }

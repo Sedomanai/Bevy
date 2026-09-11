@@ -3,12 +3,19 @@ use bevy::{
     prelude::*,
 };
 
+use crate::sset::*;
 use crate::traits::*;
 
 pub fn register_systems<S: ScheduleLabel + Clone + Default>(app: &mut App) {
-    app.add_observer(on_tracker_inserted)
-        .add_observer(cache_before_removed::<TrackerTransform, TrackedBy>)
-        .add_systems(S::default(), lerp_target_transform);
+    app.add_observer(on_insertion_sync::<TrackerTransform>)
+        .add_systems(
+            S::default(),
+            on_copy_from_relation::<TrackerTransform, Tracking>.in_set(CopyFromRelationSet),
+        )
+        .add_systems(
+            S::default(),
+            lerp_target_transform.in_set(UpdateMovementSet),
+        );
 }
 
 // The reason Tracker needs custom relationship machinery is three specific things:
@@ -16,8 +23,7 @@ pub fn register_systems<S: ScheduleLabel + Clone + Default>(app: &mut App) {
 // Smoothing (lerp instead of rigid snap), hard with parent-child
 // Cross-hierarchy targets (tracking something you're not a child of), and
 // Decoupled despawn lifetime.
-
-#[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Component, Clone, Copy, Deref, Debug, PartialEq, Eq)]
 #[require(TrackerTransform)]
 #[relationship(relationship_target = TrackedBy)]
 pub struct Tracking(pub Entity);
@@ -31,7 +37,7 @@ pub struct TrackedBy(Vec<Entity>);
 #[require(Transform)]
 pub struct TrackerTransform {
     pub decay: f32,
-    pub transform: Transform,
+    pub transform: GlobalTransform,
     pub snap: bool,
     pub active: bool,
 }
@@ -40,16 +46,10 @@ impl Default for TrackerTransform {
     fn default() -> Self {
         Self {
             decay: 10.0,
-            transform: Transform::IDENTITY,
+            transform: GlobalTransform::IDENTITY,
             snap: true,
             active: true,
         }
-    }
-}
-
-impl OnRelTargetDestruction for TrackerTransform {
-    fn cache(&mut self, gt: &GlobalTransform) {
-        self.transform = gt.compute_transform();
     }
 }
 
@@ -59,60 +59,34 @@ impl TrackerTransform {
     }
 }
 
-#[derive(Component, Clone, Copy)]
-#[require(Transform)]
-pub struct TrackerDoNotSyncOnInsert;
-
-fn on_tracker_inserted(
-    trigger: On<Insert, TrackerTransform>,
-    mut commands: Commands,
-    mut query: Query<(
-        &mut TrackerTransform,
-        &GlobalTransform,
-        Has<TrackerDoNotSyncOnInsert>,
-    )>,
-) {
-    let e = trigger.entity;
-    let Ok((mut tracker, tr, no_sync)) = query.get_mut(e) else {
-        return;
-    };
-
-    if no_sync {
-        commands.entity(e).remove::<TrackerDoNotSyncOnInsert>();
-        return;
+impl CopyFromGlobalTransform for TrackerTransform {
+    fn copy_transform(&mut self, gt: &GlobalTransform) {
+        self.transform = *gt;
     }
-
-    tracker.transform = tr.compute_transform();
 }
 
 /// Syncs transform towards target entity (if active) or cached transform fallback.
 fn lerp_target_transform(
     time: Res<Time>,
-    mut query: Query<(
-        &mut TrackerTransform,
-        &mut Transform,
-        Option<&Tracking>,
-        Option<&ChildOf>,
-    )>,
+    mut query: Query<(&mut TrackerTransform, &mut Transform, Option<&ChildOf>)>,
     transforms: Query<&GlobalTransform>,
 ) {
-    for (mut tracker, mut tr, tracking, child_of) in query.iter_mut() {
+    for (mut tracker, mut tr, child_of) in query.iter_mut() {
         if !tracker.active {
             continue;
         }
 
-        let tracked_global = tracking.and_then(|e| transforms.get(e.0).ok());
         let parent_global = child_of.and_then(|c| transforms.get(c.parent()).ok());
 
-        let tracked_local = match (tracked_global, parent_global) {
-            (Some(tracked), Some(parent)) => tracked.reparented_to(parent),
-            (Some(tracked), None) => tracked.compute_transform(),
-            (None, _) => tracker.transform,
+        let tracked_local = if let Some(parent_tr) = parent_global {
+            tracker.transform.reparented_to(parent_tr)
+        } else {
+            tracker.transform.compute_transform()
         };
 
         lerp_to_target_internal(
             &mut tr,
-            &tracked_local,
+            tracked_local,
             tracker.decay * time.delta_secs(),
             tracker.snap,
         );
@@ -123,13 +97,13 @@ fn lerp_target_transform(
     }
 }
 
-fn lerp_to_target_internal(tr: &mut Transform, target_tr: &Transform, x: f32, snap: bool) {
-    if tr == target_tr {
+fn lerp_to_target_internal(tr: &mut Transform, target_tr: Transform, x: f32, snap: bool) {
+    if *tr == target_tr {
         return;
     }
 
     if snap {
-        *tr = *target_tr;
+        *tr = target_tr;
         return;
     }
 
