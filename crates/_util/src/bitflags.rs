@@ -1,5 +1,5 @@
-// 1. Define a macro to eliminate boilerplate
-macro_rules! impl_bitflags {
+#[macro_export]
+macro_rules! bitflags {
     (
         #[derive($($derive:meta),*)]
         pub struct $name:ident($vis:vis $ty:ty) {

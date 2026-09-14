@@ -7,15 +7,12 @@ use crate::sset::*;
 use crate::traits::*;
 
 pub fn register_systems<S: ScheduleLabel + Clone + Default>(app: &mut App) {
-    app.add_observer(on_insertion_sync::<TrackerTransform>)
+    app //.add_observer(on_insertion_sync::<Tracker, Tracking>)
         .add_systems(
             S::default(),
-            on_copy_from_relation::<TrackerTransform, Tracking>.in_set(CopyFromRelationSet),
+            on_copy_from_relation::<Tracker, Tracking>.in_set(CopyFromRelationSet),
         )
-        .add_systems(
-            S::default(),
-            lerp_target_transform.in_set(UpdateMovementSet),
-        );
+        .add_systems(S::default(), lerp_tracker.in_set(UpdateMovementSet));
 }
 
 // The reason Tracker needs custom relationship machinery is three specific things:
@@ -24,7 +21,7 @@ pub fn register_systems<S: ScheduleLabel + Clone + Default>(app: &mut App) {
 // Cross-hierarchy targets (tracking something you're not a child of), and
 // Decoupled despawn lifetime.
 #[derive(Component, Clone, Copy, Deref, Debug, PartialEq, Eq)]
-#[require(TrackerTransform)]
+#[require(Tracker)]
 #[relationship(relationship_target = TrackedBy)]
 pub struct Tracking(pub Entity);
 
@@ -32,101 +29,112 @@ pub struct Tracking(pub Entity);
 #[relationship_target(relationship = Tracking)]
 pub struct TrackedBy(Vec<Entity>);
 
+sonolil_util::bitflags! {
+    #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+    pub struct TrackerTraits(u32) {
+        const TRANSLATE = 0b0001;
+        const ROTATE    = 0b0010;
+        const SCALE     = 0b0100; // Not default
+    }
+}
+
 /// Component holding interpolation state and cached target transform.
 #[derive(Component)]
 #[require(Transform)]
-pub struct TrackerTransform {
+pub struct Tracker {
     pub decay: f32,
-    pub transform: GlobalTransform,
-    pub snap: bool,
-    pub active: bool,
+    pub transform: Transform,
+    pub traits: TrackerTraits,
+    pub snap: u32,
 }
 
-impl Default for TrackerTransform {
+impl Default for Tracker {
     fn default() -> Self {
         Self {
             decay: 10.0,
-            transform: GlobalTransform::IDENTITY,
-            snap: true,
-            active: true,
+            transform: Transform::IDENTITY,
+            traits: TrackerTraits::TRANSLATE | TrackerTraits::ROTATE,
+            snap: 2,
         }
     }
 }
 
-impl TrackerTransform {
-    pub fn new(decay: f32) -> Self {
-        Self { decay, ..default() }
+impl Tracker {
+    pub fn new(decay: f32, traits: TrackerTraits) -> Self {
+        Self {
+            decay,
+            traits,
+            ..default()
+        }
     }
 }
 
-impl CopyFromGlobalTransform for TrackerTransform {
-    fn copy_transform(&mut self, gt: &GlobalTransform) {
-        self.transform = *gt;
+impl MovementTrait for Tracker {
+    fn copy_transform(&mut self, rel: &GlobalTransform, pt: Option<&GlobalTransform>) {
+        self.transform = match pt {
+            Some(pt) => rel.reparented_to(pt),
+            None => rel.compute_transform(),
+        };
     }
 }
 
 /// Syncs transform towards target entity (if active) or cached transform fallback.
-fn lerp_target_transform(
-    time: Res<Time>,
-    mut query: Query<(&mut TrackerTransform, &mut Transform, Option<&ChildOf>)>,
-    transforms: Query<&GlobalTransform>,
-) {
-    for (mut tracker, mut tr, child_of) in query.iter_mut() {
-        if !tracker.active {
+fn lerp_tracker(time: Res<Time>, mut query: Query<(&mut Tracker, &mut Transform)>) {
+    for (tracker, tr) in query.iter_mut() {
+        if tracker.traits.0 == 0 {
             continue;
         }
-
-        let parent_global = child_of.and_then(|c| transforms.get(c.parent()).ok());
-
-        let tracked_local = if let Some(parent_tr) = parent_global {
-            tracker.transform.reparented_to(parent_tr)
-        } else {
-            tracker.transform.compute_transform()
-        };
-
-        lerp_to_target_internal(
-            &mut tr,
-            tracked_local,
-            tracker.decay * time.delta_secs(),
-            tracker.snap,
-        );
-
-        if tracker.snap {
-            tracker.snap = false;
-        }
+        lerp_tracker_internal(tr, tracker, time.delta_secs());
     }
 }
 
-fn lerp_to_target_internal(tr: &mut Transform, target_tr: Transform, x: f32, snap: bool) {
-    if *tr == target_tr {
+fn lerp_tracker_internal(mut tr: Mut<'_, Transform>, mut tracker: Mut<'_, Tracker>, dt: f32) {
+    let track_traits = &tracker.traits;
+    let local_target_tr = &tracker.transform;
+
+    let translate_if = track_traits.contains(TrackerTraits::TRANSLATE)
+        && tr.translation.distance_squared(local_target_tr.translation) > 0.0001;
+    let scale_if = track_traits.contains(TrackerTraits::SCALE)
+        && tr.scale.distance_squared(local_target_tr.scale) > 0.0001;
+    let rotate_if = track_traits.contains(TrackerTraits::ROTATE)
+        && tr.rotation.dot(local_target_tr.rotation).abs() < 0.9999;
+
+    // mut here
+    if tracker.snap > 0 {
+        if translate_if {
+            tr.translation = local_target_tr.translation;
+        }
+        if scale_if {
+            tr.scale = local_target_tr.scale;
+        }
+        if rotate_if {
+            tr.rotation = local_target_tr.rotation;
+        }
+        tracker.snap -= 1;
         return;
     }
 
-    if snap {
-        *tr = target_tr;
+    if !translate_if && !scale_if && !rotate_if {
         return;
     }
 
-    let translate_if = tr.translation.distance_squared(target_tr.translation) > 0.0001;
-    let scale_if = tr.scale.distance_squared(target_tr.scale) > 0.0001;
-    let rotate_if = tr.rotation.dot(target_tr.rotation).abs() < 0.9999;
-
+    let x = tracker.decay * dt;
     let factor = (x * (1.0 - x * (0.5 - x / 6.0))).clamp(0.0, 1.0);
 
     tr.translation = if translate_if {
-        tr.translation.lerp(target_tr.translation, factor)
+        tr.translation.lerp(local_target_tr.translation, factor)
     } else {
-        target_tr.translation
+        local_target_tr.translation
     };
 
     tr.rotation = if rotate_if {
-        tr.rotation.slerp(target_tr.rotation, factor)
+        tr.rotation.slerp(local_target_tr.rotation, factor)
     } else {
-        target_tr.rotation
+        local_target_tr.rotation
     };
 
     tr.scale = if scale_if {
-        tr.scale.lerp(target_tr.scale, factor)
+        tr.scale.lerp(local_target_tr.scale, factor)
     } else {
         tr.scale
     };

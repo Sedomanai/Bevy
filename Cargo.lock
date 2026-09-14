@@ -8554,7 +8554,10 @@ dependencies = [
  "sonolil_app",
  "sonolil_camera",
  "sonolil_hub",
+ "sonolil_movement",
  "sonolil_render",
+ "sonolil_setup3d",
+ "sonolil_util",
 ]
 
 [[package]]
@@ -8573,6 +8576,7 @@ dependencies = [
  "bevy",
  "bevy_framepace",
  "sonolil_hub",
+ "sonolil_movement",
  "sonolil_render",
 ]
 
@@ -8599,6 +8603,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "sonolil_hub",
+ "sonolil_util",
 ]
 
 [[package]]
@@ -8607,7 +8612,17 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_framepace",
+]
+
+[[package]]
+name = "sonolil_setup3d"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_framepace",
+ "sonolil_camera",
  "sonolil_hub",
+ "sonolil_util",
 ]
 
 [[package]]

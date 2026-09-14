@@ -2,3 +2,4 @@
 name = "sonolil_util"
 version = "0.1.0"
 edition = "2021"
+description = "Rust utilities that do not depend on bevy or other large dependencies."

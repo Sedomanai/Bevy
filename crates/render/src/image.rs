@@ -5,7 +5,7 @@ use bevy::{
 
 pub trait ImageExt {
     fn quick_new() -> Image;
-    fn resize_and_reallocate_pixels(&mut self, width: u32, height: u32) {}
+    fn resize_and_reallocate_pixels(&mut self, width: u32, height: u32);
 }
 
 impl ImageExt for Image {

@@ -6,21 +6,31 @@ use bevy::{camera::CameraProjection, camera::SubCameraView, prelude::*};
 pub struct BlendProjection {
     /// 0.0 = Perspective (3D), 1.0 = Orthographic (2D)
     pub blend: f32,
-    ortho_scale: f32,
+    pub near: f32,
+    pub far: f32,
+    /// Zoom scale that unites the ortho and persp
+    /// Used internally to sync camera distance from focal_point as zoom point
+    /// Works only with CameraPlugin
+    zoom_scale: f32,
+    /// ortho_top or top at focal/near plane
+    focal_top: f32,
+    /// ortho_right or right at focal/near plane
+    focal_right: f32,
+    /// The distance from the camera at which ortho and persp plane projects the same frustrum
     focal_distance: f32,
     aspect_ratio: f32,
     fov: f32,
-    near: f32,
-    far: f32,
 }
 
 impl Default for BlendProjection {
     fn default() -> Self {
         Self {
             blend: 0.0,
-            ortho_scale: 1.0,
+            zoom_scale: 1.0,
             focal_distance: 10.0,
             aspect_ratio: 1.0,
+            focal_top: 0.0,
+            focal_right: 0.0,
             fov: std::f32::consts::FRAC_PI_4, // 45 deg
             near: 0.05,
             far: 800.0,
@@ -29,19 +39,42 @@ impl Default for BlendProjection {
 }
 
 impl BlendProjection {
+    // blend 0.0 for perspective, 1.0 for ortho projection
+    pub fn new(blend: f32, focal_distance: f32) -> Self {
+        let mut selfie = Self { blend, ..default() };
+        selfie.set_focal_distance(focal_distance);
+        selfie
+    }
+
+    /// Set the distance in which ortho and persp planes overlap to the same viewport.
+    ///
+    /// Ortho area is recalculated from the distance.
     pub fn set_focal_distance(&mut self, distance: f32) {
-        self.focal_distance = distance;
-        self.sync_to_focal_distance();
+        self.focal_distance = distance.max(self.near).max(0.001);
+
+        let ortho_scale = ortho_from_focal_distance(self.focal_distance, self.fov);
+        self.focal_top = ortho_scale * 0.5;
+        self.focal_right = self.focal_top * self.aspect_ratio;
     }
 
-    pub fn sync_to_focal_distance(&mut self) {
-        self.ortho_scale = ortho_from_radius(self.focal_distance.max(self.near), self.fov);
+    /// There are two ways to sync zoom to focus, both valid.
+    ///
+    /// This one syncs sets zoom scale directly, and
+    pub fn sync_zoom(&mut self, zoom_scale: f32) {
+        self.zoom_scale = zoom_scale;
     }
 
-    pub fn is_orthographic(&self) -> bool {
+    /// There are two ways to sync zoom to focus, both valid.
+    ///
+    /// This one syncs zoom with current distance's ratio to focal distance, with the focal distance intact.
+    pub fn sync_zoom_to_focus(&mut self, curr_dist: f32) {
+        self.zoom_scale = (curr_dist / self.focal_distance).max(0.001);
+    }
+
+    pub fn is_blend_orthographic(&self) -> bool {
         self.blend >= 0.999
     }
-    pub fn is_perspective(&self) -> bool {
+    pub fn is_blend_perspective(&self) -> bool {
         self.blend <= 0.001
     }
     pub fn set_blend(&mut self, value: f32) {
@@ -50,9 +83,9 @@ impl BlendProjection {
     }
 
     pub fn clamp_blend(&mut self) {
-        if self.is_perspective() {
+        if self.is_blend_perspective() {
             self.blend = 0.0;
-        } else if self.is_orthographic() {
+        } else if self.is_blend_orthographic() {
             self.blend = 1.0;
         }
     }
@@ -60,10 +93,10 @@ impl BlendProjection {
 
 // #[derive(Component, Default, Copy, Clone)]
 // struct CurrBlendProjection(Vec3);
-
 impl CameraProjection for BlendProjection {
     fn get_clip_from_view(&self) -> Mat4 {
-        if self.is_perspective() {
+        if self.is_blend_perspective() {
+            // There's just no way to provide it manually right now.
             PerspectiveProjection {
                 fov: self.fov,
                 aspect_ratio: self.aspect_ratio,
@@ -72,42 +105,38 @@ impl CameraProjection for BlendProjection {
                 ..Default::default()
             }
             .get_clip_from_view()
-        } else if self.is_orthographic() {
-            OrthographicProjection {
-                scale: self.ortho_scale,
-                near: self.near,
-                far: self.far,
-                ..OrthographicProjection::default_3d()
-            }
-            .get_clip_from_view()
+        } else if self.is_blend_orthographic() {
+            let right = self.focal_right * self.zoom_scale;
+            let top = self.focal_top * self.zoom_scale;
+            Mat4::orthographic_rh(-right, right, -top, top, self.far, self.near)
         } else {
             // pray
-
             let b = self.blend;
 
             let (sin_fov, cos_fov) = (self.fov * 0.5).sin_cos();
-            let y_scale_p = cos_fov / sin_fov; // 1 / tan(fov/2)
+            let y_scale_p = cos_fov / sin_fov;
             let x_scale_p = y_scale_p / self.aspect_ratio;
-            let r_p = self.far / (self.near - self.far);
 
-            let ortho_top = self.ortho_scale * 0.5;
-            let ortho_right = ortho_top * self.aspect_ratio;
-            let y_scale_o = 1.0 / ortho_top;
-            let x_scale_o = 1.0 / ortho_right;
-            let r_o = 1.0 / (self.near - self.far);
+            let y_scale_o = 1.0 / (self.focal_top * self.zoom_scale);
+            let x_scale_o = 1.0 / (self.focal_right * self.zoom_scale);
+
+            let inv_range = 1.0 / (self.far - self.near);
+            let z_coeff_p = self.near * inv_range; // reverse-Z perspective
+            let z_coeff_o = inv_range; // reverse-Z ortho
 
             let x_scale = x_scale_p.lerp(x_scale_o, b);
             let y_scale = y_scale_p.lerp(y_scale_o, b);
-            let z_z = r_p.lerp(r_o, b);
+
+            let z_coeff = z_coeff_p.lerp(z_coeff_o, b);
+            let z_const = self.far * z_coeff; // 양 끝에서 D = far * C 로 항상 성립
+
             let z_w = (-1.0_f32).lerp(0.0, b);
-            let w_z = (r_p * self.near).lerp(r_o * self.near, b);
-            let w_w = (0.0_f32).lerp(1.0, b);
 
             Mat4::from_cols(
                 Vec4::new(x_scale, 0.0, 0.0, 0.0),
                 Vec4::new(0.0, y_scale, 0.0, 0.0),
-                Vec4::new(0.0, 0.0, z_z, z_w),
-                Vec4::new(0.0, 0.0, w_z, w_w),
+                Vec4::new(0.0, 0.0, z_coeff, z_w),
+                Vec4::new(0.0, 0.0, z_const, b),
             )
         }
     }
@@ -138,6 +167,7 @@ impl CameraProjection for BlendProjection {
     fn update(&mut self, width: f32, height: f32) {
         if height > 0.0 {
             self.aspect_ratio = width / height;
+            self.focal_right = self.focal_top * self.aspect_ratio;
         }
     }
 
@@ -146,38 +176,50 @@ impl CameraProjection for BlendProjection {
     }
 
     fn get_frustum_corners(&self, z_near: f32, z_far: f32) -> [Vec3A; 8] {
-        if self.is_perspective() {
+        if self.is_blend_perspective() {
             // Pure Perspective
-            PerspectiveProjection {
-                fov: self.fov,
-                aspect_ratio: self.aspect_ratio,
-                near: self.near,
-                far: self.far,
-                ..Default::default()
-            }
-            .get_frustum_corners(z_near, z_far)
-        } else if self.is_orthographic() {
-            // Pure Orthographic
-            OrthographicProjection {
-                scale: self.ortho_scale,
-                near: self.near,
-                far: self.far,
-                ..OrthographicProjection::default_3d()
-            }
-            .get_frustum_corners(z_near, z_far)
+            let half_tan_fov = crate::math::half_tan_fov(self.fov);
+            let a = z_near.abs() * half_tan_fov;
+            let b = z_far.abs() * half_tan_fov;
+            let aspect_ratio = self.aspect_ratio;
+            [
+                Vec3A::new(a * aspect_ratio, -a, z_near),  // bottom right
+                Vec3A::new(a * aspect_ratio, a, z_near),   // top right
+                Vec3A::new(-a * aspect_ratio, a, z_near),  // top left
+                Vec3A::new(-a * aspect_ratio, -a, z_near), // bottom left
+                Vec3A::new(b * aspect_ratio, -b, z_far),   // bottom right
+                Vec3A::new(b * aspect_ratio, b, z_far),    // top right
+                Vec3A::new(-b * aspect_ratio, b, z_far),   // top left
+                Vec3A::new(-b * aspect_ratio, -b, z_far),  // bottom left
+            ]
+        } else if self.is_blend_orthographic() {
+            // NOTE: These are virtually copy pasted from the orthographic.
+            let right = self.focal_right * self.zoom_scale;
+            let top = self.focal_top * self.zoom_scale;
+            [
+                Vec3A::new(right, -top, z_near),  // bottom self.right
+                Vec3A::new(right, top, z_near),   // self.top self.right
+                Vec3A::new(-right, top, z_near),  // self.top left
+                Vec3A::new(-right, -top, z_near), // bottom left
+                Vec3A::new(right, -top, z_far),   // bottom self.right
+                Vec3A::new(right, top, z_far),    // self.top self.right
+                Vec3A::new(-right, top, z_far),   // self.top left
+                Vec3A::new(-right, -top, z_far),  // bottom left
+            ]
         } else {
             let b = self.blend;
-
-            let tan_half_fov = (self.fov * 0.5).tan();
-            let ortho_top = self.ortho_scale * 0.5;
-            let ortho_right = ortho_top * self.aspect_ratio;
-
             let half_extents_at = |z: f32| -> (f32, f32) {
-                let persp_half_h = z.abs() * tan_half_fov;
-                let persp_half_w = persp_half_h * self.aspect_ratio;
+                let depth_ratio = z.abs() / self.focal_distance;
+                let persp_half_h = self.focal_top * depth_ratio;
+                let persp_half_w = self.focal_right * depth_ratio;
 
-                let half_h = persp_half_h.lerp(ortho_top, b);
-                let half_w = persp_half_w.lerp(ortho_right, b);
+                let ortho_half_h = self.focal_top * self.zoom_scale;
+                let ortho_half_w = self.focal_right * self.zoom_scale;
+
+                // 3. Blend between perspective and orthographic
+                let half_h = persp_half_h.lerp(ortho_half_h, b);
+                let half_w = persp_half_w.lerp(ortho_half_w, b);
+
                 (half_w, half_h)
             };
 
@@ -198,29 +240,13 @@ impl CameraProjection for BlendProjection {
     }
 }
 
-/// This only matters for blend camera, setting radius.
-pub fn on_insert_projection(
-    trigger: On<Insert, Projection>,
-    mut projections: Query<&mut Projection>,
-) {
-    let Ok(mut proj) = projections.get_mut(trigger.entity) else {
-        return;
-    };
-
-    if let Projection::Custom(proj) = proj.as_mut() {
-        if let Some(proj) = proj.as_any_mut().downcast_mut::<BlendProjection>() {
-            proj.sync_to_focal_distance();
-        }
-    }
-}
-
 pub fn pan_multiplier(proj: &Projection, viewport_height: f32) -> f32 {
     match proj {
         Projection::Perspective(_) => 10.0, // ?
         Projection::Orthographic(ortho) => ortho.area.height() / viewport_height,
         Projection::Custom(custom) => {
             if let Some(blend_proj) = custom.as_any().downcast_ref::<BlendProjection>() {
-                blend_proj.ortho_scale / viewport_height
+                blend_proj.focal_top * 2.0 / viewport_height
             } else {
                 10.0
             }

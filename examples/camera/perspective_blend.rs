@@ -1,19 +1,73 @@
-use bevy::prelude::*;
+use bevy::{math::VectorSpace, prelude::*};
+use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
+use sonolil_camera::projection::BlendProjection;
+use sonolil_hub::*;
+use sonolil_setup3d::{Plugin3dSettings, default_shapes::DefaultShapeFactory};
 
 fn main() {
     let mut app = App::new();
 
     app.add_plugins(sonolil_app::AppPlugin {
-        fps_overlay: false,
+        fps_overlay: true,
         ..default()
+    })
+    .add_plugins(sonolil_setup3d::Setup3dPlugin(
+        Plugin3dSettings::SHAPES | Plugin3dSettings::GRID | Plugin3dSettings::LIGHT,
+    ))
+    .add_plugins(bevy_egui::EguiPlugin::default())
+    .add_systems(Startup, setup)
+    .add_systems(Startup, setup_camera)
+    .add_systems(EguiPrimaryContextPass, update_camera)
+    .run();
+}
+
+fn setup(mut commands: Commands, shapes: Option<Res<DefaultShapeFactory>>) {
+    let Some(shapes) = shapes else {
+        return;
+    };
+    commands.spawn((
+        shapes.cube_bundle(),
+        Transform {
+            translation: Vec3::new(0.0, 0.5, 0.0),
+            ..default()
+        },
+    ));
+}
+
+fn setup_camera(
+    mut commands: Commands,
+    query: Query<Entity, (With<Camera>, With<tags::EngineCamera>)>,
+) {
+    if let Some(e) = query.single().ok() {
+        commands.entity(e).insert(Camera3d::default());
+    };
+}
+
+fn update_camera(
+    mut contexts: EguiContexts,
+    mut camera_query: Query<&mut Projection, (With<Camera>, With<tags::EngineCamera>)>,
+) {
+    let Ok(mut projection) = camera_query.single_mut() else {
+        return;
+    };
+
+    let Some(ctx) = contexts.ctx_mut().ok() else {
+        return;
+    };
+
+    egui::Window::new("Camera Controls").show(ctx, |ui| {
+        // Downcast to your custom projection inside Projection::Custom
+        if let Projection::Custom(custom) = &mut *projection {
+            if let Some(blend) = custom.get_mut::<BlendProjection>() {
+                ui.label("Projection Settings");
+
+                // Slider binding directly to your struct's fields
+                ui.add(
+                    egui::Slider::new(&mut blend.blend, 0.0..=1.0)
+                        .text("Blend Projection Slider")
+                        .custom_formatter(|val, _| format!("{:.0}%", val * 100.0)),
+                );
+            }
+        }
     });
-
-    //app.add_plugins(bevy_)
-
-    // .add_plugins(sonolil_basic3d::Basic3DPlugins {
-    //     orthographic: true,
-    //     draw_grid: true,
-    //     dolly: true,
-    // })
-    app.run();
 }

@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-
 fn main() {
     let mut app = App::new();
 
@@ -7,6 +6,5 @@ fn main() {
         fps_overlay: true,
         ..default()
     })
-    .add_plugins(bevy::dev_tools::infinite_grid::InfiniteGridPlugin)
     .run();
 }

@@ -1,5 +1,5 @@
-use crate::traits::image::ImageExt;
-use bevy::{camera::RenderTarget, prelude::*};
+use bevy::{asset::Handle, camera::RenderTarget, image::Image, prelude::*};
+use sonolil_render::image::*;
 
 #[derive(Component, Default)]
 pub struct RenderTargetImage {
@@ -17,7 +17,6 @@ pub fn render_target_to_image<T: Component>(
         let image = Image::quick_new();
         let handle = images.add(image);
 
-        //let bundle = viewport_bundle(&mut images);
         commands
             .entity(e)
             .insert(RenderTarget::Image(handle.clone().into()));

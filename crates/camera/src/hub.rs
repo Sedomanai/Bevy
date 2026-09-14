@@ -1,14 +1,4 @@
-use bevy::camera::visibility::RenderLayers;
-use bevy::prelude::*;
-use sonolil_hub::*;
-pub struct RenderPlugin;
-impl Plugin for RenderPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(schedule::SpawnTaggedSchedule, init);
-    }
-}
-
-fn init(
+pub fn init(
     mut commands: Commands,
     mut main_cam: Query<Entity, (With<tags::MainCamera>, With<Camera>)>,
     mut sub_cam: Query<Entity, (With<tags::SubCamera>, With<Camera>)>,
@@ -16,11 +6,11 @@ fn init(
 ) {
     // Debug Cam
     if let Ok(e) = debug_cam.single_mut() {
-        let e = commands.entity(e);
+        let mut e = commands.entity(e);
         e.insert(Camera {
             order: 32,
             ..default()
         });
-        e.insert(BundleRenderLayers::layer(32));
+        e.insert(RenderLayers::layer(32));
     }
 }

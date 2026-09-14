@@ -1,0 +1,14 @@
+[package]
+name = "sonolil_setup3d"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+hub = ["sonolil_hub", "sonolil_camera/hub"]
+
+[dependencies]
+sonolil_hub = { path = "../_hub", optional = true }
+sonolil_camera = { path = "../camera" }
+sonolil_util = { path = "../_util" }
+bevy = { workspace = true, features = ["bevy_dev_tools", "bevy_render", "bevy_pbr"] }
+bevy_framepace = { workspace = true }

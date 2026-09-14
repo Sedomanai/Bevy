@@ -8,14 +8,15 @@ use crate::sset::*;
 use crate::traits::*;
 
 pub fn register_systems<Schedule: ScheduleLabel + Clone + Default>(app: &mut App) {
-    app.add_systems(
-        Schedule::default(),
-        on_copy_from_relation::<Orbiter, Orbiting>.in_set(CopyFromRelationSet),
-    )
-    .add_systems(
-        Schedule::default(),
-        update_rotation.in_set(UpdateMovementSet),
-    );
+    app //.add_observer(on_insertion_sync::<Orbiter, Orbiting>)
+        .add_systems(
+            Schedule::default(),
+            on_copy_from_relation::<Orbiter, Orbiting>.in_set(CopyFromRelationSet),
+        )
+        .add_systems(
+            Schedule::default(),
+            update_rotation.in_set(UpdateMovementSet),
+        );
 }
 
 /// Relationship of @OrbitedBy.
@@ -39,7 +40,7 @@ pub struct OrbitedBy(Vec<Entity>);
 /// Component that orbits another point. Point may or may not be another entity (with Transform)
 #[derive(Component, Copy, Clone)]
 pub struct Orbiter {
-    radius: f32,
+    pub radius: f32,
     pub focal_point: Vec3,
     pub yaw: f32,
     pub pitch: f32,
@@ -60,24 +61,37 @@ impl Default for Orbiter {
     }
 }
 
-impl CopyFromGlobalTransform for Orbiter {
-    fn copy_transform(&mut self, gt: &GlobalTransform) {
-        self.focal_point = gt.translation();
+impl MovementTrait for Orbiter {
+    fn copy_transform(&mut self, rel: &GlobalTransform, parent: Option<&GlobalTransform>) {
+        self.focal_point = match parent {
+            Some(pt) => pt.affine().inverse().transform_point3(rel.translation()),
+            None => rel.translation(),
+        };
     }
+    // fn sync_on_insert(&mut self, gt: &GlobalTransform) {
+    //     self.focal_point = gt.translation();
+    // }
 }
 
 impl Orbiter {
-    pub fn new() -> Self {
-        Self { ..default() }
+    pub fn new(radius: f32, look_at: bool) -> Self {
+        Self {
+            radius: radius.max(0.0),
+            look_at,
+            ..default()
+        }
+    }
+
+    pub fn toggle_look_at_focal_point(&mut self) {
+        self.look_at = !self.look_at;
     }
 
     pub fn zoom_by_fraction(&mut self, fraction: f32) {
         self.radius -= self.radius * fraction;
     }
 
-    pub fn zoom_by_addition(&mut self, addition: f32) {
-        self.radius -= addition;
-        self.radius = self.radius.max(0.0);
+    pub fn zoom_by_step(&mut self, step: f32) {
+        self.radius -= step;
     }
 
     pub fn set_rotation_from_quat(&mut self, quat: &Quat) {
@@ -115,31 +129,28 @@ impl Orbiter {
 }
 
 fn update_rotation(
-    mut query: Query<(&mut Transform, &Orbiter, Option<&ChildOf>)>,
-    transforms: Query<&GlobalTransform>,
+    mut query: Query<(
+        &mut Transform,
+        &Orbiter,
+        Option<&mut crate::tracker::Tracker>,
+    )>,
 ) {
-    for (mut tr, orbiter, child_of) in query.iter_mut() {
-        let parent_global = child_of.and_then(|c| transforms.get(c.parent()).ok());
-
-        let local = if let Some(parent_tr) = parent_global {
-            parent_tr
-                .affine()
-                .inverse()
-                .transform_point3(orbiter.focal_point)
-        } else {
-            orbiter.focal_point
-        };
-
+    for (mut tr, orbiter, mut tracker) in query.iter_mut() {
         let rotation = orbiter.quaternion();
-        let rotate_offset = rotation * (Vec3::Z * orbiter.radius);
-        let final_pos = local + rotate_offset;
+        let rotate_offset = rotation * (Vec3::Z * orbiter.radius.max(0.0));
+        let final_pos = orbiter.focal_point + rotate_offset;
+
+        let tr: &mut Transform = match tracker {
+            Some(ref mut tracker) => &mut tracker.transform,
+            None => &mut tr, // or &mut tr depending on how original `tr` is passed in
+        };
 
         if tr.translation != final_pos {
             tr.translation = final_pos;
         }
 
         if orbiter.look_at && tr.rotation != rotation {
-            tr.look_at(final_pos, rotation * Vec3::Y);
+            tr.rotation = rotation;
         }
     }
 }

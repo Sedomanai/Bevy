@@ -5,8 +5,8 @@ edition = "2021"
 
 [features]
 hub = ["sonolil_hub"]
-# 2d = ["bevy/2d"]
 
 [dependencies]
-sonolil_hub = { path = "../_hub", optional = true }
+sonolil_util = { path = "../_util" }
+sonolil_hub = { path = "../_hub" , optional = true }
 bevy = { workspace = true }

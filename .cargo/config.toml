@@ -1,7 +1,7 @@
 [alias]
 dev-build = "build --workspace --features bevy/dynamic_linking"
 dev = "run --features bevy/dynamic_linking"
-exam= "run --features bevy/dynamic_linking --example"
+exam = "run --features bevy/dynamic_linking --example"
 
 # someday maybe
 pub = "publish --workspace --no-verify"
