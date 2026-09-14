@@ -68,17 +68,24 @@ impl MovementTrait for Orbiter {
             None => rel.translation(),
         };
     }
-    // fn sync_on_insert(&mut self, gt: &GlobalTransform) {
-    //     self.focal_point = gt.translation();
-    // }
 }
 
 impl Orbiter {
-    pub fn new(radius: f32, look_at: bool) -> Self {
+    pub fn new(starting_point: Vec3, focal_point: Vec3, look_at: bool) -> Self {
+        let diff = focal_point - starting_point;
+        let dir = diff.normalize_or_zero();
+
+        let yaw = (-dir.x).atan2(-dir.z);
+        let pitch = dir.y.asin();
+        let roll = 0.0; // Standard upright alignment
+
         Self {
-            radius: radius.max(0.0),
+            radius: diff.length(),
+            focal_point,
+            yaw,
+            pitch,
+            roll,
             look_at,
-            ..default()
         }
     }
 
@@ -86,12 +93,9 @@ impl Orbiter {
         self.look_at = !self.look_at;
     }
 
-    pub fn zoom_by_fraction(&mut self, fraction: f32) {
-        self.radius -= self.radius * fraction;
-    }
-
-    pub fn zoom_by_step(&mut self, step: f32) {
-        self.radius -= step;
+    pub fn zoom(&mut self, step: i32, sensitivity: f32) {
+        let s = sensitivity.max(0.0);
+        self.radius *= (1.0 - s).powi(step);
     }
 
     pub fn set_rotation_from_quat(&mut self, quat: &Quat) {

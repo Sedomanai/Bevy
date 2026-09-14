@@ -57,16 +57,11 @@ impl BlendProjection {
         self.focal_right = self.focal_top * self.aspect_ratio;
     }
 
-    /// There are two ways to sync zoom to focus, both valid.
-    ///
-    /// This one syncs sets zoom scale directly, and
-    pub fn sync_zoom(&mut self, zoom_scale: f32) {
-        self.zoom_scale = zoom_scale;
+    pub fn zoom_scale(&self) -> f32 {
+        self.zoom_scale
     }
 
-    /// There are two ways to sync zoom to focus, both valid.
-    ///
-    /// This one syncs zoom with current distance's ratio to focal distance, with the focal distance intact.
+    /// Syncs zoom with current distance's ratio to focal distance, with the focal distance intact.
     pub fn sync_zoom_to_focus(&mut self, curr_dist: f32) {
         self.zoom_scale = (curr_dist / self.focal_distance).max(0.001);
     }
@@ -245,8 +240,8 @@ pub fn pan_multiplier(proj: &Projection, viewport_height: f32) -> f32 {
         Projection::Perspective(_) => 10.0, // ?
         Projection::Orthographic(ortho) => ortho.area.height() / viewport_height,
         Projection::Custom(custom) => {
-            if let Some(blend_proj) = custom.as_any().downcast_ref::<BlendProjection>() {
-                blend_proj.focal_top * 2.0 / viewport_height
+            if let Some(blend_proj) = custom.get::<BlendProjection>() {
+                (blend_proj.focal_top * 2.0) / viewport_height
             } else {
                 10.0
             }

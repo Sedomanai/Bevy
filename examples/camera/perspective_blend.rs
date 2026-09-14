@@ -2,6 +2,7 @@ use bevy::{math::VectorSpace, prelude::*};
 use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 use sonolil_camera::projection::BlendProjection;
 use sonolil_hub::*;
+use sonolil_movement::MovementPlugin;
 use sonolil_setup3d::{Plugin3dSettings, default_shapes::DefaultShapeFactory};
 
 fn main() {
@@ -14,9 +15,10 @@ fn main() {
     .add_plugins(sonolil_setup3d::Setup3dPlugin(
         Plugin3dSettings::SHAPES | Plugin3dSettings::GRID | Plugin3dSettings::LIGHT,
     ))
+    .add_plugins(MovementPlugin)
     .add_plugins(bevy_egui::EguiPlugin::default())
     .add_systems(Startup, setup)
-    .add_systems(Startup, setup_camera)
+    //.add_systems(Startup, setup_camera)
     .add_systems(EguiPrimaryContextPass, update_camera)
     .run();
 }
