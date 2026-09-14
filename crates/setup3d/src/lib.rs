@@ -38,7 +38,7 @@ impl Plugin for Setup3dPlugin {
             app.add_plugins(sonolil_hub::Hub);
         }
 
-        app.add_plugins(sonolil_camera::CameraPlugin);
+        app.add_plugins(sonolil_camera::CameraPlugin::default());
 
         if self.contains(Plugin3dSettings::GRID) {
             app.add_plugins(InfiniteGridPlugin)

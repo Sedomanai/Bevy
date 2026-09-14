@@ -22,21 +22,34 @@ pub struct SonolilCameraBundle {
     tracker: Tracker,
 }
 
-pub struct CameraPlugin;
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CameraPluginTemplate {
+    Blender,
+}
+
+pub struct CameraPlugin {
+    pub starting_point: CameraPluginTemplate,
+}
 
 impl Default for CameraPlugin {
     fn default() -> Self {
-        Self {}
+        Self {
+            starting_point: CameraPluginTemplate::Blender,
+        }
     }
 }
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(SpawnCameraPluginSchedule, spawn_default_3d_cameras);
+        match self.starting_point {
+            CameraPluginTemplate::Blender => {
+                app.add_systems(SpawnCameraPluginSchedule, spawn_blender_cam);
+            }
+        };
     }
 }
 
-fn spawn_default_3d_cameras(mut commands: Commands) {
+fn spawn_blender_cam(commands: Commands) {
     let blender_camera_pos = Vec3::new(7.358, 4.958, 7.358);
 
     spawn_sonolil_camera(
