@@ -133,13 +133,9 @@ name = "show_window"
 path = "examples/app/show_window.rs"
 
 [[example]]
-name = "3d_window"
-path = "examples/app/3d_window.rs"
-
-[[example]]
 name = "movement_showcase"
 path = "examples/movement/movement_showcase.rs"
 
 [[example]]
-name = "perspective_blend"
-path = "examples/camera/perspective_blend.rs"
+name = "camera"
+path = "examples/camera/camera.rs"

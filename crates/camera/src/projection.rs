@@ -39,6 +39,14 @@ impl Default for BlendProjection {
 }
 
 impl BlendProjection {
+    pub fn new_ortho(focal_distance: f32) -> Self {
+        BlendProjection::new(1.0, focal_distance)
+    }
+
+    pub fn new_persp(focal_distance: f32) -> Self {
+        BlendProjection::new(0.0, focal_distance)
+    }
+
     // blend 0.0 for perspective, 1.0 for ortho projection
     pub fn new(blend: f32, focal_distance: f32) -> Self {
         let mut selfie = Self { blend, ..default() };

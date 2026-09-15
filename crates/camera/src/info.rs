@@ -1,5 +1,4 @@
 use bevy::{
-    ecs::query::QuerySingleError,
     prelude::*,
     window::{PrimaryWindow, Window},
 };
@@ -8,7 +7,7 @@ use bevy::{
 pub struct CameraMouseInfo {
     last: Option<Vec2>,
     curr: Option<Vec2>,
-    hovering: bool,
+    //hovering: bool,
     pub window: Option<Entity>,
 }
 

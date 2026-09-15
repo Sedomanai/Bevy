@@ -1,8 +1,7 @@
-use bevy::{math::VectorSpace, prelude::*};
+use bevy::prelude::*;
 use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
-use sonolil_camera::projection::BlendProjection;
+use sonolil_camera::*;
 use sonolil_hub::*;
-use sonolil_movement::MovementPlugin;
 use sonolil_setup3d::{Plugin3dSettings, default_shapes::DefaultShapeFactory};
 
 fn main() {
@@ -15,10 +14,9 @@ fn main() {
     .add_plugins(sonolil_setup3d::Setup3dPlugin(
         Plugin3dSettings::SHAPES | Plugin3dSettings::GRID | Plugin3dSettings::LIGHT,
     ))
-    .add_plugins(MovementPlugin)
+    .add_plugins(CameraPlugin(CameraPluginTemplate::Blender))
     .add_plugins(bevy_egui::EguiPlugin::default())
     .add_systems(Startup, setup)
-    //.add_systems(Startup, setup_camera)
     .add_systems(EguiPrimaryContextPass, update_camera)
     .run();
 }
@@ -28,21 +26,12 @@ fn setup(mut commands: Commands, shapes: Option<Res<DefaultShapeFactory>>) {
         return;
     };
     commands.spawn((
-        shapes.cube_bundle(),
+        shapes.cube_bundle(sonolil_setup3d::default_shapes::DefaultShapeColor::Blue),
         Transform {
             translation: Vec3::new(0.0, 0.5, 0.0),
             ..default()
         },
     ));
-}
-
-fn setup_camera(
-    mut commands: Commands,
-    query: Query<Entity, (With<Camera>, With<tags::EngineCamera>)>,
-) {
-    if let Some(e) = query.single().ok() {
-        commands.entity(e).insert(Camera3d::default());
-    };
 }
 
 fn update_camera(
@@ -59,7 +48,7 @@ fn update_camera(
 
     egui::Window::new("Camera Controls").show(ctx, |ui| {
         // Downcast to your custom projection inside Projection::Custom
-        if let Projection::Custom(custom) = &mut *projection {
+        if let Projection::Custom(custom) = projection.as_mut() {
             if let Some(blend) = custom.get_mut::<BlendProjection>() {
                 ui.label("Projection Settings");
 

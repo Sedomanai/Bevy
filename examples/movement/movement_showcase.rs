@@ -1,6 +1,9 @@
+// RIGHT CLICK START TEST MOVING
+
 use bevy::prelude::*;
+use sonolil_camera::*;
 use sonolil_movement::*;
-use sonolil_setup3d::default_shapes::DefaultShapeFactory;
+use sonolil_setup3d::default_shapes::*;
 
 fn main() {
     let mut app = App::new();
@@ -11,6 +14,7 @@ fn main() {
     })
     .add_plugins(sonolil_setup3d::Setup3dPlugin::default())
     .add_plugins(sonolil_movement::MovementPlugin)
+    .add_plugins(sonolil_camera::CameraPlugin(CameraPluginTemplate::Blender))
     .add_systems(Startup, showcase)
     .add_systems(Update, rotate_tagged)
     .run();
@@ -29,28 +33,36 @@ fn showcase(mut commands: Commands, shapes: Option<Res<DefaultShapeFactory>>) {
 
     let orbiter = commands
         .spawn((
-            shapes.cube_bundle(),
-            orbital::Orbiter::new(3.5, false),
+            shapes.cube_bundle(DefaultShapeColor::Green),
+            orbital::Orbiter {
+                look_at: false,
+                radius: 3.5,
+                ..default()
+            },
             CentralObject,
             Transform {
-                scale: Vec3::new(0.5, 0.5, 0.5),
+                scale: Vec3::new(0.8, 0.8, 0.8),
                 ..default()
             },
         ))
         .id();
 
     commands.spawn((
-        shapes.cube_bundle(),
-        orbital::Orbiter::new(1.5, true),
+        shapes.cube_bundle(DefaultShapeColor::Blue),
+        orbital::Orbiter {
+            look_at: true,
+            radius: 2.5,
+            ..default()
+        },
         orbital::Orbiting(orbiter),
         Transform {
-            scale: Vec3::new(0.3, 0.3, 0.3),
+            scale: Vec3::new(0.6, 0.6, 0.6),
             ..default()
         },
     ));
 
     commands.spawn((
-        shapes.sphere_bundle(),
+        shapes.sphere_bundle(DefaultShapeColor::Red),
         tracker::Tracker {
             decay: 5.0,
             snap: 2,
@@ -59,7 +71,7 @@ fn showcase(mut commands: Commands, shapes: Option<Res<DefaultShapeFactory>>) {
         tracker::Tracking(orbiter),
         TrackerTag,
         Transform {
-            scale: Vec3::new(0.2, 0.2, 0.2),
+            scale: Vec3::new(0.3, 0.3, 0.3),
             ..default()
         },
     ));
@@ -69,9 +81,11 @@ fn rotate_tagged(
     time: Res<Time>,
     mouse: Res<ButtonInput<MouseButton>>,
     mut flag: Local<bool>,
-    mut query: Query<(Has<CentralObject>, &mut orbital::Orbiter)>,
+    mut query: Query<(Has<CentralObject>, &mut orbital::Orbiter), Without<Camera>>,
 ) {
-    if mouse.just_pressed(MouseButton::Left) {
+    // RIGHT CLICK START TEST MOVING
+
+    if mouse.just_pressed(MouseButton::Right) {
         *flag = !*flag;
     }
 

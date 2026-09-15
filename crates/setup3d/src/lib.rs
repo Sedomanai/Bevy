@@ -35,10 +35,10 @@ impl Plugin for Setup3dPlugin {
     fn build(&self, app: &mut App) {
         #[cfg(feature = "hub")]
         {
-            app.add_plugins(sonolil_hub::Hub);
+            if !app.is_plugin_added::<sonolil_hub::Hub>() {
+                app.add_plugins(sonolil_hub::Hub);
+            }
         }
-
-        app.add_plugins(sonolil_camera::CameraPlugin::default());
 
         if self.contains(Plugin3dSettings::GRID) {
             app.add_plugins(InfiniteGridPlugin)

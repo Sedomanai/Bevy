@@ -2,22 +2,9 @@
 
 use std::f32::consts::FRAC_PI_2;
 
-use bevy::{ecs::schedule::ScheduleLabel, prelude::*};
+use bevy::{ecs::event::Trigger, prelude::*};
 
-use crate::sset::*;
 use crate::traits::*;
-
-pub fn register_systems<Schedule: ScheduleLabel + Clone + Default>(app: &mut App) {
-    app //.add_observer(on_insertion_sync::<Orbiter, Orbiting>)
-        .add_systems(
-            Schedule::default(),
-            on_copy_from_relation::<Orbiter, Orbiting>.in_set(CopyFromRelationSet),
-        )
-        .add_systems(
-            Schedule::default(),
-            update_rotation.in_set(UpdateMovementSet),
-        );
-}
 
 /// Relationship of @OrbitedBy.
 ///
@@ -111,10 +98,10 @@ impl Orbiter {
 
     // Prevent gimbal lock and keep yaw within [-PI, PI] to prevent slerp spinning issues over time.
     pub fn clamp(&mut self) {
-        self.yaw = self.yaw.rem_euclid(std::f32::consts::TAU);
-        if self.yaw > std::f32::consts::PI {
-            self.yaw -= std::f32::consts::TAU;
-        }
+        // self.yaw = self.yaw.rem_euclid(std::f32::consts::TAU);
+        // if self.yaw > std::f32::consts::PI {
+        //     self.yaw -= std::f32::consts::TAU;
+        // }
         let max_pitch = FRAC_PI_2 - 0.001;
         self.pitch = self.pitch.clamp(-max_pitch, max_pitch);
     }
@@ -129,32 +116,5 @@ impl Orbiter {
     /// Get quaternion from yaw/pitch/roll.
     pub fn quaternion(&self) -> Quat {
         Quat::from_euler(EulerRot::YXZ, self.yaw, self.pitch, self.roll)
-    }
-}
-
-fn update_rotation(
-    mut query: Query<(
-        &mut Transform,
-        &Orbiter,
-        Option<&mut crate::tracker::Tracker>,
-    )>,
-) {
-    for (mut tr, orbiter, mut tracker) in query.iter_mut() {
-        let rotation = orbiter.quaternion();
-        let rotate_offset = rotation * (Vec3::Z * orbiter.radius.max(0.0));
-        let final_pos = orbiter.focal_point + rotate_offset;
-
-        let tr: &mut Transform = match tracker {
-            Some(ref mut tracker) => &mut tracker.transform,
-            None => &mut tr, // or &mut tr depending on how original `tr` is passed in
-        };
-
-        if tr.translation != final_pos {
-            tr.translation = final_pos;
-        }
-
-        if orbiter.look_at && tr.rotation != rotation {
-            tr.rotation = rotation;
-        }
     }
 }
