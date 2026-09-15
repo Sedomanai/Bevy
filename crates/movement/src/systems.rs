@@ -5,20 +5,19 @@ use system_set::*;
 use traits::*;
 
 pub fn register_systems<Schedule: ScheduleLabel + Clone + Default>(app: &mut App) {
-    app //.add_observer(on_insertion_sync::<Orbiter, Orbiting>)
-        .add_systems(
-            Schedule::default(),
-            on_copy_from_relation::<Orbiter, Orbiting>.in_set(CopyFromRelationSet),
-        ) //.add_observer(on_insertion_sync::<Tracker, Tracking>)
-        .add_systems(
-            Schedule::default(),
-            on_copy_from_relation::<Tracker, Tracking>.in_set(CopyFromRelationSet),
-        )
-        .add_systems(Schedule::default(), update_orbit.in_set(UpdateMovementSet))
-        .add_systems(
-            Schedule::default(),
-            update_tracker.in_set(UpdateMovementSet).after(update_orbit),
-        );
+    app.add_systems(
+        Schedule::default(),
+        on_copy_from_relation::<Orbiter, Orbiting>.in_set(CopyFromRelationSet),
+    )
+    .add_systems(
+        Schedule::default(),
+        on_copy_from_relation::<Tracker, Tracking>.in_set(CopyFromRelationSet),
+    )
+    .add_systems(Schedule::default(), update_orbit.in_set(UpdateMovementSet))
+    .add_systems(
+        Schedule::default(),
+        update_tracker.in_set(UpdateMovementSet).after(update_orbit),
+    );
 }
 
 pub fn update_orbit(mut query: Query<(&mut Transform, &Orbiter, Option<&mut Tracker>)>) {
@@ -44,14 +43,24 @@ pub fn update_orbit(mut query: Query<(&mut Transform, &Orbiter, Option<&mut Trac
 /// Syncs transform towards target entity (if active) or cached transform fallback.
 pub fn update_tracker(
     time: Res<Time>,
-    mut query: Query<(&mut Tracker, &mut Transform, Option<&Orbiter>)>,
+    mut query: Query<(
+        &mut Tracker,
+        &mut Transform,
+        Option<&Orbiter>,
+        Option<&Tracking>,
+    )>,
+    orbiters: Query<&Orbiter>,
 ) {
-    for (tracker, tr, orbiter) in query.iter_mut() {
+    for (tracker, tr, orbiter, tracking) in query.iter_mut() {
         if tracker.traits.0 == 0 {
             continue;
         }
 
-        lerp_tracker_internal(tr, tracker, time.delta_secs(), orbiter);
+        if let Some(orbiter) = tracking.and_then(|rel| orbiters.get(rel.0).ok()) {
+            lerp_tracker_internal(tr, tracker, time.delta_secs(), Some(orbiter));
+        } else {
+            lerp_tracker_internal(tr, tracker, time.delta_secs(), orbiter);
+        }
     }
 }
 
@@ -145,17 +154,4 @@ fn lerp_tracker_internal(
     } else {
         tr.rotation = local_target_tr.rotation
     };
-
-    // tr.rotation = if rotate_if {
-    //     match orbiter {
-    //         Some(orbiter) => {
-    //             if orbiter.look_at {
-    //                 tr.look_at(orbiter.focal_point, Vec3::Y)
-    //             }
-    //         }
-    //         None => tr.rotation.slerp(local_target_tr.rotation, factor),
-    //     }
-    // } else {
-    //     local_target_tr.rotation
-    // };
 }

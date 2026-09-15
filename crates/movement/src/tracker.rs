@@ -1,7 +1,4 @@
-use bevy::{
-    ecs::{component::Component, schedule::ScheduleLabel},
-    prelude::*,
-};
+use bevy::{ecs::component::Component, prelude::*};
 
 use crate::traits::*;
 
