@@ -1,5 +1,5 @@
-use bevy::{asset::Handle, camera::RenderTarget, image::Image, prelude::*};
-use sonolil_render::image::*;
+use crate::traits::ImageExt;
+use bevy::{asset::Handle, camera::RenderTarget, prelude::*};
 
 #[derive(Component, Default)]
 pub struct RenderTargetImage {

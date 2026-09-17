@@ -8577,7 +8577,6 @@ dependencies = [
  "bevy_framepace",
  "sonolil_hub",
  "sonolil_movement",
- "sonolil_render",
 ]
 
 [[package]]

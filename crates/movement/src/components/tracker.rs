@@ -1,6 +1,5 @@
+use crate::_traits::MovementTrait;
 use bevy::{ecs::component::Component, prelude::*};
-
-use crate::traits::*;
 
 // The reason Tracker needs custom relationship machinery is three specific things:
 //

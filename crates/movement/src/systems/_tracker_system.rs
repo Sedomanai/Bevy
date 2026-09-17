@@ -1,44 +1,5 @@
-pub use crate::tracker::*;
-use crate::*;
-use bevy::ecs::schedule::ScheduleLabel;
-use system_set::*;
-use traits::*;
-
-pub fn register_systems<Schedule: ScheduleLabel + Clone + Default>(app: &mut App) {
-    app.add_systems(
-        Schedule::default(),
-        on_copy_from_relation::<Orbiter, Orbiting>.in_set(CopyFromRelationSet),
-    )
-    .add_systems(
-        Schedule::default(),
-        on_copy_from_relation::<Tracker, Tracking>.in_set(CopyFromRelationSet),
-    )
-    .add_systems(Schedule::default(), update_orbit.in_set(UpdateMovementSet))
-    .add_systems(
-        Schedule::default(),
-        update_tracker.in_set(UpdateMovementSet).after(update_orbit),
-    );
-}
-
-pub fn update_orbit(mut query: Query<(&mut Transform, &Orbiter, Option<&mut Tracker>)>) {
-    for (mut tr, orbiter, mut tracker) in query.iter_mut() {
-        let rotation = orbiter.quaternion();
-        let final_pos = orbiter.focal_point + rotation * (Vec3::Z * orbiter.radius.max(0.0));
-
-        let tr: &mut Transform = match tracker {
-            Some(ref mut tracker) => &mut tracker.transform,
-            None => &mut tr,
-        };
-
-        if tr.translation != final_pos {
-            tr.translation = final_pos;
-        }
-
-        if orbiter.look_at && tr.rotation != rotation {
-            tr.rotation = rotation;
-        }
-    }
-}
+use crate::components::{Orbiter, Tracker, TrackerTraits, Tracking};
+use bevy::prelude::*;
 
 /// Syncs transform towards target entity (if active) or cached transform fallback.
 pub fn update_tracker(

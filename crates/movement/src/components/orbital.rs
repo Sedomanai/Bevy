@@ -2,9 +2,8 @@
 
 use std::f32::consts::FRAC_PI_2;
 
-use bevy::{ecs::event::Trigger, prelude::*};
-
-use crate::traits::*;
+use crate::_traits::MovementTrait;
+use bevy::prelude::*;
 
 /// Relationship of @OrbitedBy.
 ///
@@ -98,10 +97,10 @@ impl Orbiter {
 
     // Prevent gimbal lock and keep yaw within [-PI, PI] to prevent slerp spinning issues over time.
     pub fn clamp(&mut self) {
-        // self.yaw = self.yaw.rem_euclid(std::f32::consts::TAU);
-        // if self.yaw > std::f32::consts::PI {
-        //     self.yaw -= std::f32::consts::TAU;
-        // }
+        self.yaw = self.yaw.rem_euclid(std::f32::consts::TAU);
+        if self.yaw > std::f32::consts::PI {
+            self.yaw -= std::f32::consts::TAU;
+        }
         let max_pitch = FRAC_PI_2 - 0.001;
         self.pitch = self.pitch.clamp(-max_pitch, max_pitch);
     }

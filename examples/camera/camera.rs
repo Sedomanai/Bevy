@@ -49,7 +49,7 @@ fn update_camera(
     egui::Window::new("Camera Controls").show(ctx, |ui| {
         // Downcast to your custom projection inside Projection::Custom
         if let Projection::Custom(custom) = projection.as_mut() {
-            if let Some(blend) = custom.get_mut::<BlendProjection>() {
+            if let Some(blend) = custom.get_mut::<components::BlendProjection>() {
                 ui.label("Projection Settings");
 
                 // Slider binding directly to your struct's fields

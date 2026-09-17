@@ -1,7 +1,7 @@
-use crate::projection::BlendProjection;
-use crate::CameraMouseInfo;
+use super::info::CameraMouseInfo;
+use super::projection::BlendProjection;
 use bevy::prelude::*;
-use sonolil_movement::*;
+use sonolil_movement::components::Tracker;
 
 #[derive(Bundle)]
 pub struct TrackingCameraBundle {

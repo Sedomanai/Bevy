@@ -34,7 +34,7 @@ fn showcase(mut commands: Commands, shapes: Option<Res<DefaultShapeFactory>>) {
     let orbiter = commands
         .spawn((
             shapes.cube_bundle(DefaultShapeColor::Green),
-            orbital::Orbiter {
+            components::Orbiter {
                 look_at: false,
                 radius: 3.5,
                 ..default()
@@ -49,12 +49,12 @@ fn showcase(mut commands: Commands, shapes: Option<Res<DefaultShapeFactory>>) {
 
     commands.spawn((
         shapes.cube_bundle(DefaultShapeColor::Blue),
-        orbital::Orbiter {
+        components::Orbiter {
             look_at: true,
             radius: 2.5,
             ..default()
         },
-        orbital::Orbiting(orbiter),
+        components::Orbiting(orbiter),
         Transform {
             scale: Vec3::new(0.6, 0.6, 0.6),
             ..default()
@@ -63,12 +63,12 @@ fn showcase(mut commands: Commands, shapes: Option<Res<DefaultShapeFactory>>) {
 
     commands.spawn((
         shapes.sphere_bundle(DefaultShapeColor::Red),
-        tracker::Tracker {
+        components::Tracker {
             decay: 5.0,
             snap: 2,
             ..default()
         },
-        tracker::Tracking(orbiter),
+        components::Tracking(orbiter),
         TrackerTag,
         Transform {
             scale: Vec3::new(0.3, 0.3, 0.3),
@@ -81,7 +81,7 @@ fn rotate_tagged(
     time: Res<Time>,
     mouse: Res<ButtonInput<MouseButton>>,
     mut flag: Local<bool>,
-    mut query: Query<(Has<CentralObject>, &mut orbital::Orbiter), Without<Camera>>,
+    mut query: Query<(Has<CentralObject>, &mut components::Orbiter), Without<Camera>>,
 ) {
     // RIGHT CLICK START TEST MOVING
 

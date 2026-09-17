@@ -1,1 +1,2 @@
-pub mod image;
+pub mod render_target;
+pub mod traits;

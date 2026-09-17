@@ -1,4 +1,4 @@
-use crate::math::*;
+use crate::_util::_math::*;
 use bevy::{camera::CameraProjection, camera::SubCameraView, prelude::*};
 
 /// Camera projection storing ONLY the blend factor.
@@ -52,6 +52,10 @@ impl BlendProjection {
         let mut selfie = Self { blend, ..default() };
         selfie.set_focal_distance(focal_distance);
         selfie
+    }
+
+    pub fn pan_ratio(&self, viewport_height: f32) -> f32 {
+        (self.focal_top * 2.0) / viewport_height
     }
 
     /// Set the distance in which ortho and persp planes overlap to the same viewport.
@@ -181,7 +185,7 @@ impl CameraProjection for BlendProjection {
     fn get_frustum_corners(&self, z_near: f32, z_far: f32) -> [Vec3A; 8] {
         if self.is_blend_perspective() {
             // Pure Perspective
-            let half_tan_fov = crate::math::half_tan_fov(self.fov);
+            let half_tan_fov = half_tan_fov(self.fov);
             let a = z_near.abs() * half_tan_fov;
             let b = z_far.abs() * half_tan_fov;
             let aspect_ratio = self.aspect_ratio;
@@ -239,20 +243,6 @@ impl CameraProjection for BlendProjection {
                 Vec3A::new(-w_f, h_f, z_far),   // far top left
                 Vec3A::new(-w_f, -h_f, z_far),  // far bottom left
             ]
-        }
-    }
-}
-
-pub fn pan_multiplier(proj: &Projection, viewport_height: f32) -> f32 {
-    match proj {
-        Projection::Perspective(_) => 10.0, // ?
-        Projection::Orthographic(ortho) => ortho.area.height() / viewport_height,
-        Projection::Custom(custom) => {
-            if let Some(blend_proj) = custom.get::<BlendProjection>() {
-                (blend_proj.focal_top * 2.0) / viewport_height
-            } else {
-                10.0
-            }
         }
     }
 }
