@@ -2,7 +2,6 @@ use bevy::prelude::*;
 
 mod _blender_system;
 mod _info_system;
-mod _projection_system;
 
 #[cfg(feature = "hub")]
 use sonolil_hub::schedule::SpawnTaggedSchedule as SpawnCameraPluginSchedule;

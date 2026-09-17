@@ -1,5 +1,14 @@
 use bevy::prelude::*;
 
+#[derive(Default)]
+pub enum DefaultShapeColor {
+    #[default]
+    None,
+    Red,
+    Blue,
+    Green,
+}
+
 #[derive(Resource)]
 pub struct DefaultShapeFactory {
     mat: Handle<StandardMaterial>,
@@ -8,15 +17,6 @@ pub struct DefaultShapeFactory {
     mat_green: Handle<StandardMaterial>,
     cube: Handle<Mesh>,
     sphere: Handle<Mesh>,
-}
-
-#[derive(Default)]
-pub enum DefaultShapeColor {
-    #[default]
-    None,
-    Red,
-    Blue,
-    Green,
 }
 
 impl DefaultShapeFactory {

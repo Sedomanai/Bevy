@@ -1,9 +1,7 @@
+use crate::{_util::projection::pan_multiplier, BlendProjection, BlenderCamera, CameraMouseInfo};
 use bevy::{input::mouse::MouseWheel, prelude::*};
 
-use super::_projection_system::pan_multiplier;
-use crate::components::{BlendProjection, BlenderCamera, CameraMouseInfo};
-
-use sonolil_movement::components::{Orbiter, Tracker};
+use sonolil_movement::{Orbiter, Tracker};
 
 pub fn update_blender_camera(
     time: Res<Time>,

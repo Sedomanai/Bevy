@@ -1,5 +1,8 @@
 use bevy::prelude::*;
-use sonolil_setup3d::default_shapes::{DefaultShapeColor, DefaultShapeFactory};
+use sonolil_setup3d::{
+    Plugin3dSettings,
+    default_shapes::{DefaultShapeColor, DefaultShapeFactory},
+};
 
 fn main() {
     let mut app = App::new();
@@ -8,7 +11,12 @@ fn main() {
         fps_overlay: true,
         ..default()
     })
-    .add_plugins(sonolil_setup3d::Setup3dPlugin::default())
+    .add_plugins(sonolil_setup3d::Setup3dPlugin(
+        Plugin3dSettings::GRID | Plugin3dSettings::LIGHT | Plugin3dSettings::SHAPES,
+    ))
+    .add_plugins(sonolil_camera::CameraPlugin(
+        sonolil_camera::CameraPluginTemplate::Blender,
+    ))
     .add_systems(Startup, setup)
     .run();
 }

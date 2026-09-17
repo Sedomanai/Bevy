@@ -1,44 +1,22 @@
 use bevy::prelude::*;
 
+#[cfg(not(feature = "hub"))]
+use bevy::app::Update as MovementPluginSchedule;
 #[cfg(feature = "hub")]
 use sonolil_hub::schedule::SonolilUpdateSchedule as MovementPluginSchedule;
 
-#[cfg(not(feature = "hub"))]
-pub use internal::MovementPluginSchedule;
-
-#[cfg(not(feature = "hub"))]
-mod internal {
-    pub use bevy::app::MainScheduleOrder;
-    use bevy::ecs::schedule::ScheduleLabel;
-
-    #[derive(ScheduleLabel, Default, Debug, Hash, PartialEq, Eq, Clone)]
-    pub struct MovementPluginSchedule;
-}
-
-use crate::_traits::on_copy_from_relation;
-use crate::components::*;
+use crate::{_traits::on_copy_from_relation, Orbiter, Orbiting, Tracker, Tracking};
 
 mod _tracker_system;
-use _tracker_system::*;
+use _tracker_system::update_tracker;
 
 mod _orbital_system;
-use _orbital_system::*;
+use _orbital_system::update_orbit;
 
 pub mod system_set;
-pub use system_set::*;
+pub use system_set::{CopyFromRelationSet, UpdateMovementSet};
 
 pub fn register_systems(app: &mut App) {
-    app.add_schedule(Schedule::new(MovementPluginSchedule));
-    #[cfg(not(feature = "hub"))]
-    {
-        let mut main_schedule_order = app
-            .world_mut()
-            .resource_mut::<internal::MainScheduleOrder>();
-        main_schedule_order.insert_before(Update, MovementPluginSchedule);
-    }
-
-    //app.configure_schedules(schedule_build_settings)
-
     app.add_systems(
         MovementPluginSchedule,
         on_copy_from_relation::<Orbiter, Orbiting>.in_set(CopyFromRelationSet),

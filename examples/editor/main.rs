@@ -13,17 +13,19 @@ use sample_ui::*;
 
 fn main() {
     let mut app = App::new();
+
     app.add_plugins(sonolil_app::AppPlugin {
         reactive_update_mode: true,
         ..default()
     })
-    .add_plugins(sonolil_setup3d::Setup3dPlugin(
+    .add_plugins(sonolil_editor::EditorPlugin);
+
+    app.add_plugins(sonolil_setup3d::Setup3dPlugin(
         Plugin3dSettings::GRID | Plugin3dSettings::LIGHT | Plugin3dSettings::SHAPES,
     ))
     .add_plugins(sonolil_camera::CameraPlugin(
         sonolil_camera::CameraPluginTemplate::Blender,
-    ))
-    .add_plugins(sonolil_editor::EditorPlugin);
+    ));
 
     app.insert_resource(sample_ui::EditorUiState::default());
 
@@ -37,9 +39,7 @@ pub fn cam_work(
     main_cam: Query<Entity, (With<Camera>, With<sonolil_hub::tags::EngineCamera>)>,
 ) {
     if let Ok(e) = main_cam.single() {
-        commands
-            .entity(e)
-            .insert(components::RenderTargetToEguiViewport);
+        commands.entity(e).insert(RenderTargetToEguiViewport);
     }
 
     // UI Cam is a must.
@@ -94,6 +94,7 @@ pub fn update_egui_context(
             counter,
             main_view_state: state.into_inner(),
         };
+
         // #[allow(deprecated)]
         // egui::CentralPanel::default()
         //     .frame(egui::Frame::central_panel(&ctx.global_style()).inner_margin(0.))

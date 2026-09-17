@@ -6,6 +6,3 @@ pub use blender_cam::*;
 
 mod info;
 pub use info::*;
-
-mod projection;
-pub use projection::*;

@@ -130,17 +130,17 @@ sonolil_setup3d = { path = "crates/setup3d", features = ["hub"]}
 # [features]
 
 [[example]]
-name = "show_window"
-path = "examples/app/show_window.rs"
+name = "window"
+path = "examples/app/main.rs"
 
 [[example]]
 name = "docking"
-path = "examples/app/editor/docking_viewport.rs"
+path = "examples/editor/main.rs"
 
 [[example]]
-name = "movement_showcase"
-path = "examples/movement/movement_showcase.rs"
+name = "movement"
+path = "examples/movement/main.rs"
 
 [[example]]
-name = "camera"
-path = "examples/camera/camera.rs"
+name = "blend_camera"
+path = "examples/camera/blend.rs"

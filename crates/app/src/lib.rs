@@ -26,6 +26,13 @@ impl Default for AppPlugin {
 
 impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
+        #[cfg(feature = "hub")]
+        {
+            if !app.is_plugin_added::<sonolil_hub::Hub>() {
+                app.add_plugins(sonolil_hub::Hub);
+            }
+        }
+
         let present_mode = if self.reactive_update_mode {
             bevy::window::PresentMode::Immediate // Reactive
         } else {

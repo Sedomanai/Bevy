@@ -1,8 +1,12 @@
 use bevy::prelude::*;
 
 mod _util;
-pub mod components;
+pub use _util::projection::BlendProjection;
+
 mod systems;
+
+mod components;
+pub use components::*;
 
 use sonolil_movement::MovementPlugin;
 

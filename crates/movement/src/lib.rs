@@ -3,7 +3,8 @@ use bevy::prelude::*;
 mod _util;
 use _util::_traits;
 
-pub mod components;
+mod components;
+pub use components::*;
 
 mod systems;
 pub mod system_sets {
@@ -11,12 +12,6 @@ pub mod system_sets {
 }
 
 pub struct MovementPlugin;
-
-impl Default for MovementPlugin {
-    fn default() -> Self {
-        Self {}
-    }
-}
 
 impl Plugin for MovementPlugin {
     fn build(&self, app: &mut App) {

@@ -11,7 +11,7 @@ pub mod default_shapes;
 use sonolil_hub::schedule::SpawnTaggedSchedule as Plugin3dSchedule;
 
 #[cfg(not(feature = "hub"))]
-use Startup as Plugin3dSchedule;
+use bevy::app::PreStartup as Plugin3dSchedule;
 
 bitflags! {
     #[derive(Copy, Clone, Debug, PartialEq, Eq, Resource)]
@@ -33,13 +33,6 @@ impl Default for Setup3dPlugin {
 
 impl Plugin for Setup3dPlugin {
     fn build(&self, app: &mut App) {
-        #[cfg(feature = "hub")]
-        {
-            if !app.is_plugin_added::<sonolil_hub::Hub>() {
-                app.add_plugins(sonolil_hub::Hub);
-            }
-        }
-
         if self.contains(Plugin3dSettings::GRID) {
             app.add_plugins(InfiniteGridPlugin)
                 .add_systems(Plugin3dSchedule, spawn_grid);

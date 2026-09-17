@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
 use super::basic::TrackingCameraBundle;
-use super::BlendProjection;
-use sonolil_movement::components::{Orbiter, Tracker};
+use crate::BlendProjection;
+use sonolil_movement::{Orbiter, Tracker};
 
 #[derive(Debug, Component, Copy, Clone, PartialEq, Eq, Reflect)]
 pub struct BlenderCamera;

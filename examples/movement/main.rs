@@ -12,12 +12,13 @@ fn main() {
         fps_overlay: true,
         ..default()
     })
-    .add_plugins(sonolil_setup3d::Setup3dPlugin::default())
-    .add_plugins(sonolil_movement::MovementPlugin)
-    .add_plugins(sonolil_camera::CameraPlugin(CameraPluginTemplate::Blender))
-    .add_systems(Startup, showcase)
-    .add_systems(Update, rotate_tagged)
-    .run();
+    .add_plugins(sonolil_movement::MovementPlugin);
+
+    app.add_plugins(sonolil_setup3d::Setup3dPlugin::default())
+        .add_plugins(CameraPlugin(CameraPluginTemplate::Blender))
+        .add_systems(Startup, showcase)
+        .add_systems(Update, rotate_tagged)
+        .run();
 }
 
 #[derive(Component)]
@@ -34,7 +35,7 @@ fn showcase(mut commands: Commands, shapes: Option<Res<DefaultShapeFactory>>) {
     let orbiter = commands
         .spawn((
             shapes.cube_bundle(DefaultShapeColor::Green),
-            components::Orbiter {
+            Orbiter {
                 look_at: false,
                 radius: 3.5,
                 ..default()
@@ -49,12 +50,12 @@ fn showcase(mut commands: Commands, shapes: Option<Res<DefaultShapeFactory>>) {
 
     commands.spawn((
         shapes.cube_bundle(DefaultShapeColor::Blue),
-        components::Orbiter {
+        Orbiter {
             look_at: true,
             radius: 2.5,
             ..default()
         },
-        components::Orbiting(orbiter),
+        Orbiting(orbiter),
         Transform {
             scale: Vec3::new(0.6, 0.6, 0.6),
             ..default()
@@ -63,12 +64,12 @@ fn showcase(mut commands: Commands, shapes: Option<Res<DefaultShapeFactory>>) {
 
     commands.spawn((
         shapes.sphere_bundle(DefaultShapeColor::Red),
-        components::Tracker {
+        Tracker {
             decay: 5.0,
             snap: 2,
             ..default()
         },
-        components::Tracking(orbiter),
+        Tracking(orbiter),
         TrackerTag,
         Transform {
             scale: Vec3::new(0.3, 0.3, 0.3),
@@ -81,7 +82,7 @@ fn rotate_tagged(
     time: Res<Time>,
     mouse: Res<ButtonInput<MouseButton>>,
     mut flag: Local<bool>,
-    mut query: Query<(Has<CentralObject>, &mut components::Orbiter), Without<Camera>>,
+    mut query: Query<(Has<CentralObject>, &mut Orbiter), Without<Camera>>,
 ) {
     // RIGHT CLICK START TEST MOVING
 

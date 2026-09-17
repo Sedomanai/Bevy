@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 
-pub mod components;
+mod systems;
+
+mod components;
 pub use components::*;
 
 use sonolil_render::RenderPlugin;
-
-mod systems;
 
 pub struct EditorPlugin;
 

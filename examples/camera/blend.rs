@@ -11,10 +11,11 @@ fn main() {
         fps_overlay: true,
         ..default()
     })
-    .add_plugins(sonolil_setup3d::Setup3dPlugin(
+    .add_plugins(CameraPlugin(CameraPluginTemplate::Blender));
+
+    app.add_plugins(sonolil_setup3d::Setup3dPlugin(
         Plugin3dSettings::SHAPES | Plugin3dSettings::GRID | Plugin3dSettings::LIGHT,
     ))
-    .add_plugins(CameraPlugin(CameraPluginTemplate::Blender))
     .add_plugins(bevy_egui::EguiPlugin::default())
     .add_systems(Startup, setup)
     .add_systems(EguiPrimaryContextPass, update_camera)
@@ -49,7 +50,7 @@ fn update_camera(
     egui::Window::new("Camera Controls").show(ctx, |ui| {
         // Downcast to your custom projection inside Projection::Custom
         if let Projection::Custom(custom) = projection.as_mut() {
-            if let Some(blend) = custom.get_mut::<components::BlendProjection>() {
+            if let Some(blend) = custom.get_mut::<BlendProjection>() {
                 ui.label("Projection Settings");
 
                 // Slider binding directly to your struct's fields
