@@ -6,7 +6,9 @@ use _util::_traits;
 pub mod components;
 
 mod systems;
-pub use systems::{CopyFromRelationSet, UpdateMovementSet};
+pub mod system_sets {
+    pub use crate::systems::{CopyFromRelationSet, UpdateMovementSet};
+}
 
 pub struct MovementPlugin;
 

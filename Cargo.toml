@@ -120,9 +120,10 @@ serde = { workspace = true, default-features = true, features = ["derive"] }
 sonolil_hub = { path = "crates/_hub" }
 sonolil_util = { path = "crates/_util" }
 sonolil_app = { path = "crates/app", features = ["hub"] }
-sonolil_movement = { path = "crates/movement", features = ["hub"] }
 sonolil_camera = { path = "crates/camera", features = ["hub"] }
-sonolil_render = { path = "crates/render" }
+sonolil_editor = { path = "crates/editor", features = ["hub"]}
+sonolil_movement = { path = "crates/movement", features = ["hub"] }
+sonolil_render = { path = "crates/render", features = ["hub"] }
 sonolil_setup3d = { path = "crates/setup3d", features = ["hub"]}
 
 # TODO: Make features, if required some day
@@ -131,6 +132,10 @@ sonolil_setup3d = { path = "crates/setup3d", features = ["hub"]}
 [[example]]
 name = "show_window"
 path = "examples/app/show_window.rs"
+
+[[example]]
+name = "docking"
+path = "examples/app/editor/docking_viewport.rs"
 
 [[example]]
 name = "movement_showcase"

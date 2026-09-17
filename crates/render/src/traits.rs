@@ -5,7 +5,7 @@ use bevy::{
 
 pub trait ImageExt {
     fn quick_new() -> Image;
-    fn resize_and_reallocate_pixels(&mut self, width: u32, height: u32);
+    //fn resize_and_reallocate_pixels(&mut self, width: u32, height: u32);
 }
 
 impl ImageExt for Image {
@@ -32,15 +32,15 @@ impl ImageExt for Image {
         image
     }
 
-    fn resize_and_reallocate_pixels(&mut self, width: u32, height: u32) {
-        self.texture_descriptor.size = Extent3d {
-            width,
-            height,
-            depth_or_array_layers: 1,
-        };
+    // fn resize_and_reallocate_pixels(&mut self, width: u32, height: u32) {
+    //     self.texture_descriptor.size = Extent3d {
+    //         width,
+    //         height,
+    //         depth_or_array_layers: 1,
+    //     };
 
-        // 2. Reallocate CPU pixel buffer to match new dimensions (RGBA8 = 4 bytes per pixel)
-        let pixel_count = (width * height) as usize;
-        self.data = Some(vec![0u8; pixel_count * 4]);
-    }
+    //     // 2. Reallocate CPU pixel buffer to match new dimensions (RGBA8 = 4 bytes per pixel)
+    //     let pixel_count = (width * height) as usize;
+    //     self.data = Some(vec![0u8; pixel_count * 4]);
+    // }
 }

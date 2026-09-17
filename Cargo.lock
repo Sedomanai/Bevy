@@ -8553,6 +8553,7 @@ dependencies = [
  "serde",
  "sonolil_app",
  "sonolil_camera",
+ "sonolil_editor",
  "sonolil_hub",
  "sonolil_movement",
  "sonolil_render",
@@ -8574,9 +8575,19 @@ name = "sonolil_camera"
 version = "0.1.0"
 dependencies = [
  "bevy",
- "bevy_framepace",
  "sonolil_hub",
  "sonolil_movement",
+]
+
+[[package]]
+name = "sonolil_editor"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_egui",
+ "egui_dock",
+ "sonolil_hub",
+ "sonolil_render",
 ]
 
 [[package]]
@@ -8611,6 +8622,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_framepace",
+ "sonolil_hub",
 ]
 
 [[package]]

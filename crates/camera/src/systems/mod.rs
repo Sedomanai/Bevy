@@ -10,7 +10,7 @@ use sonolil_hub::schedule::SpawnTaggedSchedule as SpawnCameraPluginSchedule;
 use PreStartup as SpawnCameraPluginSchedule;
 
 #[cfg(feature = "hub")]
-use sonolil_hub::schedule::ProcessTaggedSchedule as ProcessCameraPluginSchedule;
+use sonolil_hub::schedule::PreProcessTaggedSchedule as ProcessCameraPluginSchedule;
 #[cfg(not(feature = "hub"))]
 use Startup as ProcessCameraPluginSchedule;
 
