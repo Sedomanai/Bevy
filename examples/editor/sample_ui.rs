@@ -1,12 +1,13 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, reflect::enums::Enum};
 use egui_dock::{DockState, NodeIndex, TabViewer};
 use sonolil_editor::EguiViewportState;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Tab {
+#[derive(Reflect, Resource, Debug, Clone, PartialEq, Eq)]
+pub enum DockTab {
     Inspector,
     Console,
     Viewport,
+    Custom,
 }
 
 // 2. Define the TabViewer to render content based on the active tab
@@ -16,30 +17,26 @@ pub struct MyTabViewer<'a> {
 }
 
 impl<'a> TabViewer for MyTabViewer<'a> {
-    type Tab = Tab;
+    type Tab = DockTab;
 
     fn title(&mut self, tab: &mut Self::Tab) -> egui::WidgetText {
-        match tab {
-            Tab::Inspector => "Inspector".into(),
-            Tab::Console => "Console".into(),
-            Tab::Viewport => "Viewport".into(),
-        }
+        tab.variant_name().into()
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, tab: &mut Self::Tab) {
         match tab {
-            Tab::Inspector => {
+            DockTab::Inspector => {
                 ui.heading("Inspector Panel");
                 if ui.button("Increment Counter").clicked() {
                     *self.counter += 1;
                 }
                 ui.label(format!("Shared Count: {}", self.counter));
             }
-            Tab::Console => {
+            DockTab::Console => {
                 ui.heading("Console Logs");
                 ui.label("System active. Listening for events...");
             }
-            Tab::Viewport => {
+            DockTab::Viewport => {
                 ui.heading("3D Viewport");
                 let panel_size = ui.available_size();
                 let texture_size = egui::vec2(1920.0, 1080.0);
@@ -63,25 +60,47 @@ impl<'a> TabViewer for MyTabViewer<'a> {
                         .uv(egui::Rect::from_min_max(uv_min, uv_max)),
                 );
             }
+            DockTab::Custom => {
+                ui.heading("Custom Window");
+            }
+        }
+    }
+
+    // just testing
+    fn context_menu(&mut self, ui: &mut egui::Ui, tab: &mut Self::Tab, _path: egui_dock::NodePath) {
+        match tab {
+            DockTab::Viewport => {
+                if ui.button("Reset View").clicked() {
+                    println!("Reset view {}", _path.surface.0);
+                    ui.close();
+                }
+            }
+            _ => {
+                if ui.button("Close Tab").clicked() {
+                    println!("Close {}", _path.surface.0);
+                    // Perform tab-specific close cleanup if needed
+                    ui.close();
+                }
+            }
         }
     }
 }
 
 #[derive(Resource)]
 pub struct EditorUiState {
-    pub dock_state: DockState<Tab>,
+    pub dock_state: DockState<DockTab>,
     pub counter: u32,
 }
 
 impl Default for EditorUiState {
     fn default() -> Self {
         // Create initial layout tree
-        let mut dock_state = DockState::new(vec![Tab::Viewport]);
+        let mut dock_state = DockState::new(vec![DockTab::Viewport]);
 
         // Split the viewport tab: create Inspector on the right, Console on the bottom
         let surface = dock_state.main_surface_mut();
-        let [left_node, _] = surface.split_right(NodeIndex::root(), 0.75, vec![Tab::Inspector]);
-        let _ = surface.split_below(left_node, 0.7, vec![Tab::Console]);
+        let [left_node, _] = surface.split_right(NodeIndex::root(), 0.75, vec![DockTab::Inspector]);
+        let _ = surface.split_below(left_node, 0.7, vec![DockTab::Console]);
 
         Self {
             dock_state,
