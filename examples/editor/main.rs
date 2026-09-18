@@ -155,7 +155,6 @@ fn show_docked_windows(
         counter: counter,
         main_view_state: &mut *viewport_state,
     };
-
     #[allow(deprecated)]
     DockArea::new(dock_state).show(ctx, &mut tab_viewer);
 }
